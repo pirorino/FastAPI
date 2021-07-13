@@ -1,0 +1,32 @@
+{% extends "layout.html" %}
+{% block content %}
+<br>
+<h2>picture page</h2>
+<hr>
+<script type="text/javascript" src="/static/js/js_auth"></script>
+
+<br>
+<h1>upload picture</h1>
+<form enctype="multipart/form-data" method="post" action="/fileupload">
+    <input type="file" id="source" name="files"></input>
+    <input type="file" id="target" name="files"></input>
+    <input type="hidden" id="formaccesstoken" name="access_token" value="access_token">
+    <input type="submit" value="upload picture">
+</form>
+
+<div class="col-auto">
+    <button type="button" class="btn btn-outline-primary" onClick="OnBackClick()">Back to top</button> 
+</div>
+<script>
+    window.onload = function() {
+        access_token = sessionStorage.getItem("TOKEN");    //セッションに保存
+        document.getElementById("formaccesstoken").value = access_token;
+    }
+
+    function OnBackClick(){
+      access_token = sessionStorage.getItem("TOKEN");    //セッションに保存
+      post("http://localhost:8000/pages/toppage" + "?access_token=" + access_token,"");
+    }
+</script>
+
+{% endblock %}

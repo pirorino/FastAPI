@@ -1,0 +1,48 @@
+postgreSQL
+
+pg_ctl start -D "C:\Program Files\PostgreSQL\13\data"
+
+pg_ctl stop -D "C:\Program Files\PostgreSQL\13\data"
+
+pg_ctl status -D "C:\Program Files\PostgreSQL\13\data"
+
+psql -U saru -d fastapidb
+
+\q 脱出
+
+---------
+https://qiita.com/t-iguchi/items/d01b24fed05db43fd0b8
+
+curl -X POST -H "Content-Type: application/json" -d '{"name":"aaaaa"}' localhost:8000
+
+
+NG
+curl -X POST "http://localhost:8000/token" -H  "accept: application/json" -H  "Content-Type: application/x-www-form-urlencoded" -d '{"name":"aaaaa"}' 
+
+
+OK
+curl -X GET "http://localhost:8000/users/" -H  "accept: application/json" -H  "Content-Type: application/x-www-form-urlencoded"
+
+OK
+curl -X POST "http://localhost:8000/users/create" -H  "accept: application/json" -H  "Content-Type: application/x-www-form-urlencoded" -d @create_user.json
+
+OK
+http://localhost:8000/users/find?id=1
+
+OK
+curl -X POST "http://localhost:8000/users/delete" -H  "accept: application/json" -H  "Content-Type: application/json" -d "{\"id\":1,\"username\":\"string\",\"email\":\"string\",\"password\":\"string\",\"is_active\":true,\"is_superuser\":true}"
+
+OK トークンを取得
+curl -X POST "http://localhost:8000/token" -H  "accept: application/json" -H  "Content-Type: application/x-www-form-urlencoded" -d "username=pirorino&password=password"
+
+OK access token
+curl -X GET "http://localhost:8000/users/me/" -H  "accept: application/json" -H  "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzX3Rva2VuIiwiZXhwIjoxNjE0MDY1MTY0LCJ1c2VybmFtZSI6InBpcm9yaW5vIn0.kKFsEqorI_LO16vIbrxPe8C1jsGq9B2rJghVSfaARtE"
+
+OK refresh_token
+curl -X GET "http://localhost:8000/refresh_token/" -H  "accept: application/json" -H  "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoicmVmcmVzaF90b2tlbiIsImV4cCI6MTYyMTc2NzEwMCwidXNlcm5hbWUiOiJwaXJvcmlubyJ9.CoauCFXrXMYdqVttMevMhJh0edHiU75HaSEc7-sUyBk"
+
+OK /users/super/del
+curl -X GET "http://localhost:8000/users/super/del" -H  "accept: application/json" -H  "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzX3Rva2VuIiwiZXhwIjoxNjE0NTI1Mjg3LCJ1c2VybmFtZSI6InBpcm9yaW5vIn0.-93aWRVdEx8-Db1vjjbersJuA9O7dpy3bBPXBF1a-DU" -d "{\"id\":2,\"username\":\"delete_test\",\"email\":\"delete_test_pirorino\",\"password\":\"delete\",\"is_active\":true,\"is_superuser\":false}"
+
+ーーーーーーーーーーーーget token
+{"access_token":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzX3Rva2VuIiwiZXhwIjoxNjE0NTI1Mjg3LCJ1c2VybmFtZSI6InBpcm9yaW5vIn0.-93aWRVdEx8-Db1vjjbersJuA9O7dpy3bBPXBF1a-DU","refresh_token":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoicmVmcmVzaF90b2tlbiIsImV4cCI6MTYyMjI5NzY4NywidXNlcm5hbWUiOiJwaXJvcmlubyJ9.9bg-Eq3DcXiJZtbIj3-_h_2oqQQ4MjwU3FamGkjZGaI","token_type":"bearer"}

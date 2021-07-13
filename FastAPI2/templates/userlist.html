@@ -1,0 +1,53 @@
+{% extends "layout.html" %}
+{% block content %}
+<br>
+<h2>Userlist page</h2>
+<hr>
+<script type="text/javascript" src="/static/js/js_auth"></script>
+
+<br>
+<table class="table">
+    <thead class="table-dark">
+    <tr>
+        <th>#</th>
+        <th>ユーザ名</th>
+        <th>メールアドレス</th>
+        <th>日付</th>
+        <th>有効</th>
+        <th>管理者ユーザ</th>
+    </tr>
+    </thead>
+    <tbody>
+    {% for t in user %}
+    <tr>
+        <td>{{ t['id'] }}</td>
+        <td>{{ t['username'] }}</td>
+        <td>{{ t['email'] }}</td>
+        <td>{{ t['date'] }}</td>
+        <td>{% if t['is_active'] %}
+            <div class="text-active">○</div>
+            {% else %}
+            <div class="text-nonactive">×</div>
+            {% endif %}
+        </td>
+        <td>{% if t['is_superuser'] %}
+            <div class="text-superuser">○</div>
+            {% else %}
+            <div class="text-normaluser">×</div>
+            {% endif %}
+        </td>
+    </tr>
+    {% endfor %}
+    </tbody>
+</table>
+<div class="col-auto">
+    <button type="button" class="btn btn-outline-primary" onClick="OnBackClick()">Back to top</button> 
+</div>
+<script>
+    function OnBackClick(){
+      access_token = sessionStorage.getItem("TOKEN");    //セッションに保存
+      post("http://localhost:8000/pages/toppage" + "?access_token=" + access_token,"");
+    }
+</script>
+
+{% endblock %}

@@ -1,0 +1,29 @@
+{% extends "layout.html" %}
+{% block content %}
+<br>
+<div class="row">
+    <div class="col-md-10">
+        <h1>Welcome to Sample application</h1>
+    </div>
+    <div class="col-md-2">
+        <a href="javascript:OnLinkClick1();" class="btn btn-primary">ポイント送付</a>
+    </div>
+    <div class="col-md-2">
+        <a href="javascript:OnLinkClick2();" class="btn btn-primary">送付一覧</a>
+    </div>
+</div>
+
+<hr>
+<p>This is a point send application powered by <b>FastAPI</b>!</p>
+<script>
+function OnLinkClick1(){
+    access_token = sessionStorage.getItem("TOKEN");    //セッションに保存
+    post("http://localhost:8000/pages/sendpointtran" + "?access_token=" + access_token ,"");
+}
+function OnLinkClick2(){
+    access_token = sessionStorage.getItem("TOKEN");    //セッションに保存
+    post("http://localhost:8000/pages/pointtranlist" + "?access_token=" + access_token,"");
+}
+</script>
+
+{% endblock %}

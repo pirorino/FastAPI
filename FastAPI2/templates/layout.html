@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<!-- jQuery -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <link rel="stylesheet" href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/themes/ui-lightness/jquery-ui.css"/>
+ <!-- jQuery UI -->
+    <script src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js"></script>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+    <meta charset="UTF-8">
+    <title>FastAPI Sample Application</title>
+</head>
+<body>
+<div style="display: flex; flex-direction: column; min-height: 80vh">
+    <div class="container">
+        {% block content %}
+        <!-- main -->
+        {% endblock %}
+    </div>
+</div>
+<br>
+<hr>
+<footer>
+    <div align="right">
+        <p>FastAPI test</p>
+    </div>
+</footer>
+<script type="text/javascript" src="/static/js/js_auth"></script>
+</body>
+</html>

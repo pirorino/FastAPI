@@ -1,0 +1,83 @@
+■FastAPI2\db.py
+PostgreSQL接続定義。
+databasesは使っているが、sqlalchemyはほとんど使っていないので、消してもいいかも知れない（試してみないとわからない）
+
+■FastAPI2\main.py
+pythonのメインだが、おまじない系のみ。主処理は　の方に記載
+
+app = FastAPI()があるファイル。
+CORS、DB接続処理当を実施
+
+■FastAPI2\URL.txt
+PostgreSQLの起動方法等のメモ書き。curlは、当初画面なしで動かしていた時代の実行コマンド。OKと記載のあるものは、コマンドを投げれば動くはず。
+
+
+■FastAPI2\templates\*
+Jinja2で呼び出すHTMLテンプレート。実質UI。
+{% extends "layout.html" %}
+{% block content %}
+    {% set min = namespace(cnt=0) %}
+など、{%　で囲まれた変な変数記載のある個所はJinja2による拡張で、Python側から渡されて、HTMLが生成され、ブラウザに返される。
+
+■FastAPI2\users\models.py
+テーブル定義
+
+■FastAPI2\users\router.py
+実質の主処理で、アクセス先URL＋HTTPメソッドにより、記載の処理が実行される。
+javascriptのlibraryロードも同様のURLアクセスがあるので、ここで処理している。
+
+認証・トークン関係
+ログイン画面
+ファイルupload画面（開発中）
+汎用画面
+javascriptのlibrary処理
+などなどの処理を記載。
+
+return templates.TemplateResponse('login.html',{'request': request})
+の様な記載することで、Pythonによる各種処理後、jinja2 htmlテンプレートに引数を渡してブラウザに生成HTMLを返す。
+
+■FastAPI2\users\schemes.py
+ORマップ用のクラス。Pythonで関数呼び出しする際、insertやupdateに必要な一連のデータセットがクラスになってないと引数渡しが面倒。
+ただ、関数呼び出し（引数渡し）をしないなら別にクラスなくてもいい気もする。
+responseで戻す必要があるならいるかも
+
+■FastAPI2\utils\dbutils.py
+get_connectionだけが存在。DB接続を返す共通関数
+
+■FastAPI2\static
+FastAPIの管理する静的ファイルだが、今んとこ空。
+jinja2のtemplateの所に置いてしまった為。
+
+■実行方法
+postgreSQL起動
+pg_ctl start -D "C:\Program Files\PostgreSQL\13\data"
+
+FastAPI起動
+uvicorn main:app --reload
+
+方法
+http://localhost:8000/login
+ユーザ・パスはDBに登録されていないとだめ
+
+■FastAPI2\postgreSQL_install_info.txt
+postgreSQLをローカルにインストールした時の記録
+
+
+★user/passとOAuth2のトークン処理
+https://fabeee.co.jp/blog/mattsun01/
+今回実装はpostgreSQL/databasesにしているので注意
+
+★jinja2
+公式
+https://jinja.palletsprojects.com/en/3.0.x/
+わかりやすい
+https://www.python.ambitious-engineer.com/archives/760
+
+
+★FastAPI
+公式
+https://fastapi.tiangolo.com/
+
+★databases
+公式
+https://www.encode.io/databases/

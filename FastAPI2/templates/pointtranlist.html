@@ -1,0 +1,103 @@
+{% extends "layout.html" %}
+{% block content %}
+<br>
+<h2>pointtranlist page</h2>
+<hr>
+<script type="text/javascript" src="/static/js/js_auth"></script>
+<div class="col-auto">
+    <button type="button" class="btn btn-outline-primary" onClick="OnBackClick()">Back to top</button> 
+</div>
+<script>
+    function OnBackClick(){
+      access_token = sessionStorage.getItem("TOKEN");    //セッションに保存
+      post("http://localhost:8000/pages/toppage" + "?access_token=" + access_token,"");
+    }
+</script>
+
+<div class="input-group">
+    <span class="input-group-btn">
+        <button type="button" class="btn btn-primary" id="prevbtn1"  onClick="PrevClick()">Prev</button>
+        <button type="button" class="btn btn-primary" id="nextbtn1"  onClick="NextClick()">Next</button>
+    </span>
+</div>
+<br>
+<table class="table">
+    <thead class="table-dark">
+    <tr>
+        <th>NO</th>
+        <th>送信ユーザ名</th>
+        <th>受信ユーザ名</th>
+        <th>入力日</th>
+        <th>ポイント</th>
+        <th>コメント</th>
+        <th>削除済み</th>
+    </tr>
+    </thead>
+    <tbody>
+    {% set min = namespace(cnt=0) %}
+    {% set max = namespace(cnt=0) %}
+    {% for t in pointtran %}
+        {% if loop.first %}
+            {% set min.cnt = t['number'] %}
+        {% endif %}
+        {% if loop.last  %}
+            {% set max.cnt = t['number'] %}
+        {% endif %}
+        <tr>
+        <td>{{ t['number'] }}</td>
+        <td>{{ t['from_user_name'] }}</td>
+        <td>{{ t['to_user_name'] }}</td>
+        <td>{{ t['entry_date'] }}</td>
+        <td>{{ t['point'] }}</td>
+        <td>{{ t['comment'] }}</td>
+        <td>{% if t['is_deleted'] %}
+            <div class="text-deleted">○</div>
+            {% else %}
+            <div class="text-notdeleted">×</div>
+            {% endif %}
+        </td>
+    </tr>
+    {% endfor %}
+</tbody>
+</table>
+<div class="col-auto">
+    <button type="button" class="btn btn-primary" id="prevbtn2"  onClick="PrevClick()">prev</button>
+</div>
+<div class="col-auto">
+    <button type="button" class="btn btn-primary" id="nextbtn2"  onClick="NextClick()">next</button>
+</div>
+<script>
+window.onload = function(){
+    if ({{prevbtn}} == 0){
+        const button1 = document.getElementById("prevbtn1");
+        button1.disabled = true
+        const button2 = document.getElementById("prevbtn2");
+        button2.disabled = true
+    }
+    if ({{nextbtn}} == 0){
+        const button3 = document.getElementById("nextbtn1");
+        button3.disabled = true
+        const button4 = document.getElementById("nextbtn2");
+        button4.disabled = true
+    }
+}
+
+function PrevClick(){
+    if ({{prevbtn}} != 0){
+        if (({{prevbtn}} - 30 ) < 1){
+            send_param = 0;
+        } else {
+            send_param = ({{prevbtn}} - 31);
+        }
+    }
+    access_token = sessionStorage.getItem("TOKEN");    //セッションに保存
+    post("http://localhost:8000/pages/pointtranlist" + "?access_token=" + access_token + "&param=" + send_param,"");
+}
+function NextClick(){
+    send_param = {{max.cnt}};
+    access_token = sessionStorage.getItem("TOKEN");    //セッションに保存
+    post("http://localhost:8000/pages/pointtranlist" + "?access_token=" + access_token + "&param=" + send_param,"");
+}
+</script>
+
+{% endblock %}
