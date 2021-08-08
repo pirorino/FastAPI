@@ -10,7 +10,9 @@
 <script>
     function OnBackClick(){
       access_token = sessionStorage.getItem("TOKEN");    //セッションに保存
-      post("http://localhost:8000/pages/toppage" + "?access_token=" + access_token,"");
+      var back_url = 'http://' + location.host + '/pages/toppage';
+      //post("http://localhost:8000/pages/toppage" + "?access_token=" + access_token,"");
+      post(back_url + "?access_token=" + access_token,"");
     }
 </script>
 
@@ -36,6 +38,8 @@
     <tbody>
     {% set min = namespace(cnt=0) %}
     {% set max = namespace(cnt=0) %}
+    {% set min.cnt = 0 %}
+    {% set max.cnt = 0 %}
     {% for t in pointtran %}
         {% if loop.first %}
             {% set min.cnt = t['number'] %}
@@ -83,6 +87,7 @@ window.onload = function(){
 }
 
 function PrevClick(){
+    var prev_url = 'http://' + location.host + '/pages/pointtranlist';
     if ({{prevbtn}} != 0){
         if (({{prevbtn}} - 30 ) < 1){
             send_param = 0;
@@ -91,12 +96,15 @@ function PrevClick(){
         }
     }
     access_token = sessionStorage.getItem("TOKEN");    //セッションに保存
-    post("http://localhost:8000/pages/pointtranlist" + "?access_token=" + access_token + "&param=" + send_param,"");
+    //post("http://localhost:8000/pages/pointtranlist" + "?access_token=" + access_token + "&param=" + send_param,"");
+    post(prev_url + "?access_token=" + access_token + "&param=" + send_param,"");
 }
 function NextClick(){
+    var next_url = 'http://' + location.host + '/pages/pointtranlist';
     send_param = {{max.cnt}};
     access_token = sessionStorage.getItem("TOKEN");    //セッションに保存
-    post("http://localhost:8000/pages/pointtranlist" + "?access_token=" + access_token + "&param=" + send_param,"");
+    //post("http://localhost:8000/pages/pointtranlist" + "?access_token=" + access_token + "&param=" + send_param,"");
+    post(next_url + "?access_token=" + access_token + "&param=" + send_param,"");
 }
 </script>
 

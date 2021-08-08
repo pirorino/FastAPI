@@ -24,8 +24,10 @@
     }
 
     function OnBackClick(){
+      var back_url = 'http://' + location.host + '/pages/toppage';
       access_token = sessionStorage.getItem("TOKEN");    //セッションに保存
-      post("http://localhost:8000/pages/toppage" + "?access_token=" + access_token,"");
+      //post("http://localhost:8000/pages/toppage" + "?access_token=" + access_token,"");
+      post(back_url + "?access_token=" + access_token,"");
     }
 </script>
 
