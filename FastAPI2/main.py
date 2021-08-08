@@ -1,3 +1,4 @@
+import os
 from fastapi import FastAPI, Request, Response
 from db import database
 from users.router import router as userrouter
@@ -15,7 +16,17 @@ from typing import Callable
 from fastapi.routing import APIRoute
 from pydantic import BaseModel
 
+#################### for cluster execution
+# AWS
+# HOSTNAME = os.environ['HOSTNAME']
+# EXPOSEPORT = "80"
+# local
+HOSTNAME = "localhost"
+EXPOSEPORT = "8000"
 
+print ("waitinghost is " + HOSTNAME)
+print ("exposeport is " + EXPOSEPORT)
+####################
 logger = getLogger(__name__)
 handler = StreamHandler(sys.stdout)
 handler.setLevel(DEBUG)
@@ -62,10 +73,10 @@ app.router.route_class = LoggingContextRoute
 
 # CORS definition
 origins = [
-    "http://localhost.tiangolo.com",
-    "https://localhost.tiangolo.com",
-    "http://localhost",
-    "http://localhost:8080",
+    "http://" + HOSTNAME + ".tiangolo.com",
+    "https://" + HOSTNAME + ".tiangolo.com",
+    "http://" + HOSTNAME,
+    "http://" + HOSTNAME + ":" + EXPOSEPORT
 ]
 
 # allow_credentials - オリジン間リクエストでCookieをサポートする必要があることを示します。デフォルトは False です。
