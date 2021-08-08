@@ -173,6 +173,7 @@ async def get_index(request: Request):
 
 @router.get('/login')
 async def login(request: Request):
+    print("login called")
     # login画面の表示
     return templates.TemplateResponse('login.html',{'request': request})
 
@@ -260,7 +261,7 @@ async def post_pagename(request: Request,pagename: str,access_token: str,param: 
             query = "select row_number() over() as number,* from pointtran"
         else:
             # superuserでない場合、元または先がログインユーザのデータを表示
-            query = "select row_number() over() as number,* from pointtran where from_user_name = %s or to_user_name = %s"  % (user,user)
+            query = "select row_number() over() as number,* from pointtran where from_user_name = '%s' or to_user_name = '%s'"  % (user,user)
         if param != "":
             # parameterが設定されている（現在表示NOがある）場合、param以降のデータを表示する
             maxcount = int(param)
@@ -271,15 +272,22 @@ async def post_pagename(request: Request,pagename: str,access_token: str,param: 
         print(query)
         # SELECT * FROM sample LIMIT 4 OFFSET 2;
         result = await database.fetch_all(query)
-        print(str(result[0][0]))
         result_length = len(result)
-        if result[0][0] != 1:
-            # 先頭が1行目ではない場合、前画面表示ができるという事
-            prevbtn = result[0][0]
-        if result_length == 31:
-            # 結果が31行取得できたなら、次画面表示ができるという事
-            nextbtn = 30
-            del result[-1]
+        if result_length == 0:
+            # empty =["","empty","","","",""]
+            # result.append(empty)
+            # print(str(result[0][0]))
+            print("prevbtn:" + str(prevbtn))
+            print("nextbtn:" + str(nextbtn))
+        else:
+            print(result[0])
+            if result[0][0] != 1:
+                # 先頭が1行目ではない場合、前画面表示ができるという事
+                prevbtn = result[0][0]
+            if result_length == 31:
+                # 結果が31行取得できたなら、次画面表示ができるという事
+                nextbtn = 30
+                del result[-1]
         return templates.TemplateResponse(page_file,{'request': request,'pointtran': result,'prevbtn': prevbtn,'nextbtn': nextbtn})
     elif pagename == 'sendpointtran':
         # ポイント送信登録処理、現在の所持ポイント数を表示する為fetchする
@@ -416,9 +424,11 @@ async def ptCreate(pt: PointTranCreate,access_token: str,database: Database = De
 
     # SQL(pointstockのupdate 及び pointtranのinsert)実行
     nowdate = datetime.now()
-    transaction = await database.transaction()
+    # 以下、transactionはローカルpostgresでは動作していたがコンテナに移動してから動作しなくなった。バグ
+    # transactionを有効にするとエラーにはならないが書き込みがcommitされない
+    # transaction = await database.transaction()
     try:
-        await transaction.start()
+        # await transaction.start()
         query = "UPDATE pointstock SET update_datetime = '%s',point = %s, version = '%s', is_deleted = %s \
             where username = '%s' and version = '%s'" \
             % (nowdate,before_point - ptvalues["point"],str(after_version),ptvalues["is_deleted"],ptvalues["from_user_name"],str(before_version))
@@ -433,11 +443,11 @@ async def ptCreate(pt: PointTranCreate,access_token: str,database: Database = De
             % (nowdate,ptvalues["from_user_name"],ptvalues["to_user_name"],ptvalues["entry_date"],ptvalues["point"],ptvalues["comment"],ptvalues["is_deleted"])
         print("db exec:" + query)
         result = await database.execute(query)
-        await transaction.commit()
+        # await transaction.commit()
 
         return {"errorcode": 0,"msg": "登録しました","newstock": before_point - ptvalues["point"]}
     except Exception as e:
-        await transaction.rollback()
+        # await transaction.rollback()
         print("ptcreate insert error:" + str(e))
         return {"errorcode": 1,"msg": "登録に失敗しました。再度実行してください。"}
         # raise HTTPException(status_code=401, detail=subroutine + ":" + str(e))
