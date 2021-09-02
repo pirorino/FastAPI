@@ -67,6 +67,28 @@ postgreSQLをローカルにインストールした時の記録
 https://fabeee.co.jp/blog/mattsun01/
 今回実装はpostgreSQL/databasesにしているので注意
 
+ログインからの流れの説明
+
+/login　へアクセスすると、router記載の通り /login.htmlが返される。
+login.htmlのフォームでsubmitを押すと、js_auth.jsのfunction LoginClickが呼ばれる
+
+LoginClickすると、
+1.fetch  /tokenに対してユーザ・パスワードのpostを実行
+2.post   /pages/toppageに対してアクセストークンのpostを実行
+と順番に動作する。
+
+1.はコールされたサーバ側でユーザ・パスワードを検証し、一致すればアクセストークン(TOKEN)と
+リフレッシュトーク(REFRESH_TOKEN)を返す
+クライアントはそれを受け取り、sessionstorageに保管する。
+それ以降、同一セッションであれば画面遷移が行われても、APIコール時にアクセストークンを一緒に送信することで
+API呼び出し都度簡易的なチェックがされることになる。
+
+トークンは有効期限があり、routerのcreate_tokensに記載がある
+現在はアクセストークン60min、リフレッシュトークン30days.である。
+
+
+
+
 ★jinja2
 公式
 https://jinja.palletsprojects.com/en/3.0.x/
@@ -81,3 +103,18 @@ https://fastapi.tiangolo.com/
 ★databases
 公式
 https://www.encode.io/databases/
+
+
+■ユーザ登録
+Databaseとusersテーブルができたら以下によりユーザ登録し、レコードを追加する。
+
+curl -X POST "http://localhost:8000/users/create" -H  "accept: application/json" -H  "Content-Type: application/x-www-form-urlencoded" -d @create_user.json
+
+・create_user.jsonの中身は以下
+
+
+{"username": "pirorino", "email": "pirorino@gmail.com", "password": "任意のパスワード","is_active": true,"is_superuser": false}
+
+このユーザ登録により、usersにレコードが1行追加される。
+パスワードはハッシュがかけられ登録されるので、パスワードは記憶しておくこと
+
