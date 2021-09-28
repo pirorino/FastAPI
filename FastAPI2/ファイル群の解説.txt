@@ -1,120 +1,121 @@
-��FastAPI2\db.py
-PostgreSQL�ڑ���`�B
-databases�͎g���Ă��邪�Asqlalchemy�͂قƂ�ǎg���Ă��Ȃ��̂ŁA�����Ă����������m��Ȃ��i�����Ă݂Ȃ��Ƃ킩��Ȃ��j
+■FastAPI2\db.py
+PostgreSQL接続定義。
+databasesは使っているが、sqlalchemyはほとんど使っていないので、消してもいいかも知れない（試してみないとわからない）
 
-��FastAPI2\main.py
-python�̃��C�������A���܂��Ȃ��n�̂݁B�又���́@�̕��ɋL��
+■FastAPI2\main.py
+pythonのメインだが、おまじない系のみ。主処理は　の方に記載
 
-app = FastAPI()������t�@�C���B
-CORS�ADB�ڑ������������{
+app = FastAPI()があるファイル。
+CORS、DB接続処理当を実施
 
-��FastAPI2\URL.txt
-PostgreSQL�̋N�����@���̃��������Bcurl�́A������ʂȂ��œ������Ă�������̎��s�R�}���h�BOK�ƋL�ڂ̂�����̂́A�R�}���h�𓊂���Γ����͂��B
+■FastAPI2\URL.txt
+PostgreSQLの起動方法等のメモ書き。curlは、当初画面なしで動かしていた時代の実行コマンド。OKと記載のあるものは、コマンドを投げれば動くはず。
 
 
-��FastAPI2\templates\*
-Jinja2�ŌĂяo��HTML�e���v���[�g�B����UI�B
+■FastAPI2\templates\*
+Jinja2で呼び出すHTMLテンプレート。実質UI。
 {% extends "layout.html" %}
 {% block content %}
     {% set min = namespace(cnt=0) %}
-�ȂǁA{%�@�ň͂܂ꂽ�ςȕϐ��L�ڂ̂������Jinja2�ɂ��g���ŁAPython������n����āAHTML����������A�u���E�U�ɕԂ����B
+など、{%　で囲まれた変な変数記載のある個所はJinja2による拡張で、Python側から渡されて、HTMLが生成され、ブラウザに返される。
 
-��FastAPI2\users\models.py
-�e�[�u����`
+■FastAPI2\users\models.py
+テーブル定義
 
-��FastAPI2\users\router.py
-�����̎又���ŁA�A�N�Z�X��URL�{HTTP���\�b�h�ɂ��A�L�ڂ̏��������s�����B
-javascript��library���[�h�����l��URL�A�N�Z�X������̂ŁA�����ŏ������Ă���B
+■FastAPI2\users\router.py
+実質の主処理で、アクセス先URL＋HTTPメソッドにより、記載の処理が実行される。
+javascriptのlibraryロードも同様のURLアクセスがあるので、ここで処理している。
 
-�F�؁E�g�[�N���֌W
-���O�C�����
-�t�@�C��upload��ʁi�J�����j
-�ėp���
-javascript��library����
-�ȂǂȂǂ̏������L�ځB
+認証・トークン関係
+ログイン画面
+ファイルupload画面（開発中）
+汎用画面
+javascriptのlibrary処理
+などなどの処理を記載。
 
 return templates.TemplateResponse('login.html',{'request': request})
-�̗l�ȋL�ڂ��邱�ƂŁAPython�ɂ��e�폈����Ajinja2 html�e���v���[�g�Ɉ�����n���ău���E�U�ɐ���HTML��Ԃ��B
+の様な記載することで、Pythonによる各種処理後、jinja2 htmlテンプレートに引数を渡してブラウザに生成HTMLを返す。
 
-��FastAPI2\users\schemes.py
-OR�}�b�v�p�̃N���X�BPython�Ŋ֐��Ăяo������ہAinsert��update�ɕK�v�Ȉ�A�̃f�[�^�Z�b�g���N���X�ɂȂ��ĂȂ��ƈ����n�����ʓ|�B
-�����A�֐��Ăяo���i�����n���j�����Ȃ��Ȃ�ʂɃN���X�Ȃ��Ă������C������B
-response�Ŗ߂��K�v������Ȃ炢�邩��
+■FastAPI2\users\schemes.py
+ORマップ用のクラス。Pythonで関数呼び出しする際、insertやupdateに必要な一連のデータセットがクラスになってないと引数渡しが面倒。
+ただ、関数呼び出し（引数渡し）をしないなら別にクラスなくてもいい気もする。
+responseで戻す必要があるならいるかも
 
-��FastAPI2\utils\dbutils.py
-get_connection���������݁BDB�ڑ���Ԃ����ʊ֐�
+■FastAPI2\utils\dbutils.py
+get_connectionだけが存在。DB接続を返す共通関数
 
-��FastAPI2\static
-FastAPI�̊Ǘ�����ÓI�t�@�C�������A����Ƃ���B
-jinja2��template�̏��ɒu���Ă��܂����ׁB
+■FastAPI2\static
+FastAPIの管理する静的ファイルだが、今んとこ空。
+jinja2のtemplateの所に置いてしまった為。
 
-�����s���@
-postgreSQL�N��
+■実行方法
+postgreSQL起動
 pg_ctl start -D "C:\Program Files\PostgreSQL\13\data"
 
-FastAPI�N��
+FastAPI起動
 uvicorn main:app --reload
 
-���@
+方法
 http://localhost:8000/login
-���[�U�E�p�X��DB�ɓo�^����Ă��Ȃ��Ƃ���
+ユーザ・パスはDBに登録されていないとだめ
 
-��FastAPI2\postgreSQL_install_info.txt
-postgreSQL�����[�J���ɃC���X�g�[���������̋L�^
+■FastAPI2\postgreSQL_install_info.txt
+postgreSQLをローカルにインストールした時の記録
 
 
-��user/pass��OAuth2�̃g�[�N������
+★user/passとOAuth2のトークン処理
 https://fabeee.co.jp/blog/mattsun01/
-���������postgreSQL/databases�ɂ��Ă���̂Œ���
+今回実装はpostgreSQL/databasesにしているので注意
 
-���O�C������̗���̐���
+ログインからの流れの説明
 
-/login�@�փA�N�Z�X����ƁArouter�L�ڂ̒ʂ� /login.html���Ԃ����B
-login.html�̃t�H�[����submit�������ƁAjs_auth.js��function LoginClick���Ă΂��
+/login　へアクセスすると、router記載の通り /login.htmlが返される。
+login.htmlのフォームでsubmitを押すと、js_auth.jsのfunction LoginClickが呼ばれる
 
-LoginClick����ƁA
-1.fetch  /token�ɑ΂��ă��[�U�E�p�X���[�h��post�����s
-2.post   /pages/toppage�ɑ΂��ăA�N�Z�X�g�[�N����post�����s
-�Ə��Ԃɓ��삷��B
+LoginClickすると、
+1.fetch  /tokenに対してユーザ・パスワードのpostを実行
+2.post   /pages/toppageに対してアクセストークンのpostを実行
+と順番に動作する。
 
-1.�̓R�[�����ꂽ�T�[�o���Ń��[�U�E�p�X���[�h�����؂��A��v����΃A�N�Z�X�g�[�N��(TOKEN)��
-���t���b�V���g�[�N(REFRESH_TOKEN)��Ԃ�
-�N���C�A���g�͂�����󂯎��Asessionstorage�ɕۊǂ���B
-����ȍ~�A����Z�b�V�����ł���Ή�ʑJ�ڂ��s���Ă��AAPI�R�[�����ɃA�N�Z�X�g�[�N�����ꏏ�ɑ��M���邱�Ƃ�
-API�Ăяo���s�x�ȈՓI�ȃ`�F�b�N������邱�ƂɂȂ�B
+1.はコールされたサーバ側でユーザ・パスワードを検証し、一致すればアクセストークン(TOKEN)と
+リフレッシュトーク(REFRESH_TOKEN)を返す
+クライアントはそれを受け取り、sessionstorageに保管する。
+それ以降、同一セッションであれば画面遷移が行われても、APIコール時にアクセストークンを一緒に送信することで
+API呼び出し都度簡易的なチェックがされることになる。
 
-�g�[�N���͗L������������Arouter��create_tokens�ɋL�ڂ�����
-���݂̓A�N�Z�X�g�[�N��60min�A���t���b�V���g�[�N��30days.�ł���B
-
-
+トークンは有効期限があり、routerのcreate_tokensに記載がある
+現在はアクセストークン60min、リフレッシュトークン30days.である。
 
 
-��jinja2
-����
+
+
+★jinja2
+公式
 https://jinja.palletsprojects.com/en/3.0.x/
-�킩��₷��
+わかりやすい
 https://www.python.ambitious-engineer.com/archives/760
 
 
-��FastAPI
-����
+★FastAPI
+公式
 https://fastapi.tiangolo.com/
 
-��databases
-����
+★databases
+公式
 https://www.encode.io/databases/
 
 
-�����[�U�o�^
-Database��users�e�[�u�����ł�����ȉ��ɂ�胆�[�U�o�^���A���R�[�h��ǉ�����B
+■ユーザ登録
+Databaseとusersテーブルができたら以下によりユーザ登録し、レコードを追加する。
 
 curl -X POST "http://localhost:8000/users/create" -H  "accept: application/json" -H  "Content-Type: application/x-www-form-urlencoded" -d @create_user.json
+↑間違い。 x-www-form-urlencoded でなく jsonと思われる。正確には別途・・・。
 
-�Ecreate_user.json�̒��g�͈ȉ�
+・create_user.jsonの中身は以下
 
 
-{"username": "pirorino", "email": "pirorino@gmail.com", "password": "�C�ӂ̃p�X���[�h","is_active": true,"is_superuser": false}
+{"username": "pirorino", "email": "pirorino@gmail.com", "password": "任意のパスワード","is_active": true,"is_superuser": false}
 
-���̃��[�U�o�^�ɂ��Ausers�Ƀ��R�[�h��1�s�ǉ������B
-�p�X���[�h�̓n�b�V�����������o�^�����̂ŁA�p�X���[�h�͋L�����Ă�������
+このユーザ登録により、usersにレコードが1行追加される。
+パスワードはハッシュがかけられ登録されるので、パスワードは記憶しておくこと
 
