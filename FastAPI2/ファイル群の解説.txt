@@ -108,8 +108,7 @@ https://www.encode.io/databases/
 ■ユーザ登録
 Databaseとusersテーブルができたら以下によりユーザ登録し、レコードを追加する。
 
-curl -X POST "http://localhost:8000/users/create" -H  "accept: application/json" -H  "Content-Type: application/x-www-form-urlencoded" -d @create_user.json
-↑間違い。 x-www-form-urlencoded でなく jsonと思われる。正確には別途・・・。
+curl -X POST "http://localhost:8000/users/create" -H  "accept: application/json" -H  "Content-Type: application/json" -d @create_user.json
 
 ・create_user.jsonの中身は以下
 
