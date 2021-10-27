@@ -15,7 +15,7 @@ USER = 'saru'
 PASS = 'monkey'
 Database_endpoint = 'localhost'
 
-DATABASE = 'postgres'
+DATABASE = 'postgresql'
 PORT = '5432'
 DB_NAME = 'fastapidb'
 
