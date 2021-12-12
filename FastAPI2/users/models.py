@@ -45,4 +45,50 @@ userpicture = sqlalchemy.Table(
     sqlalchemy.Column("path", sqlalchemy.String),
     sqlalchemy.Column("is_deleted", sqlalchemy.Boolean(), default=False)
 )
+nbtt_user_statuses = sqlalchemy.Table(
+    "nbtt_user_statuses", #ユーザステータス
+    metadata,
+    sqlalchemy.Column("user_id", sqlalchemy.Integer, primary_key=True, index=True), #ユーザID
+    sqlalchemy.Column("st_status_id", sqlalchemy.SMALLINT), #ステータスID
+    sqlalchemy.Column("conversational_timestamp", sqlalchemy.TIMESTAMP), #会話可能時間
+    sqlalchemy.Column("expire_timestamp", sqlalchemy.TIMESTAMP), #有効時間
+    sqlalchemy.Column("regist_timestamp", sqlalchemy.TIMESTAMP), #登録日
+    sqlalchemy.Column("regist_user_id", sqlalchemy.Integer), #登録ユーザID
+    sqlalchemy.Column("update_timestamp", sqlalchemy.TIMESTAMP), #更新日
+    sqlalchemy.Column("update_user_id", sqlalchemy.Integer) #更新ユーザID)
+)
+nbtt_conversation_lists = sqlalchemy.Table(
+    "nbtt_conversation_lists", #会話リスト
+    metadata,
+    sqlalchemy.Column("conversation_code", sqlalchemy.String, primary_key=True, index=True), #会話ID
+    sqlalchemy.Column("user_id", sqlalchemy.Integer, primary_key=True, index=True), #ユーザID
+    sqlalchemy.Column("start_timestamp", sqlalchemy.TIMESTAMP), #開始時刻
+    sqlalchemy.Column("scheduled_end_timestamp", sqlalchemy.TIMESTAMP), #終了予定時刻
+    sqlalchemy.Column("reservation_talking_category", sqlalchemy.String), #予約/会話中カテゴリ
+    sqlalchemy.Column("is_deleted", sqlalchemy.Boolean(), default=False), #削除フラグ
+    sqlalchemy.Column("regist_timestamp", sqlalchemy.TIMESTAMP), #登録日
+    sqlalchemy.Column("regist_user_id", sqlalchemy.Integer), #登録ユーザID
+    sqlalchemy.Column("update_timestamp", sqlalchemy.TIMESTAMP), #更新日
+    sqlalchemy.Column("update_user_id", sqlalchemy.Integer) #更新ユーザID)
+)
+nbmt_users = sqlalchemy.Table(
+    "nbmt_users",
+    metadata,
+    sqlalchemy.Column("user_id", sqlalchemy.Integer, primary_key=True, index=True),
+    sqlalchemy.Column("username_sei", sqlalchemy.String(60), nullable=False),
+    sqlalchemy.Column("username_mei", sqlalchemy.String(60), nullable=False),
+    sqlalchemy.Column("username_sei_kana", sqlalchemy.String(60), nullable=False),
+    sqlalchemy.Column("username_mei_kana", sqlalchemy.String(60), nullable=False),
+    sqlalchemy.Column("email", sqlalchemy.String(256), unique=True, index=True, nullable=False),
+    sqlalchemy.Column("hashed_password", sqlalchemy.String(256), nullable=False),
+    sqlalchemy.Column("refresh_token", sqlalchemy.String(512)),
+    sqlalchemy.Column("is_superuser", sqlalchemy.Boolean(), default=False),
+    sqlalchemy.Column("image_id", sqlalchemy.Integer),
+    sqlalchemy.Column("IMS_join_year", sqlalchemy.SmallInteger),
+    sqlalchemy.Column("free_comment", sqlalchemy.String(15)),
+    sqlalchemy.Column("regist_timestamp", sqlalchemy.DateTime),
+    sqlalchemy.Column("regist_user_id", sqlalchemy.Integer),
+    sqlalchemy.Column("update_timestamp", sqlalchemy.DateTime),
+    sqlalchemy.Column("update_user_id", sqlalchemy.Integer)
+)
 metadata.create_all(bind=engine)
