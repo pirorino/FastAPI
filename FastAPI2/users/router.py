@@ -163,7 +163,8 @@ async def authenticate(database: Database,email: str, password: str):
         print("no user")
         raise HTTPException(status_code=401, detail='no data matched')
     hashed_password = hashlib.sha256(password.encode('utf-8')).hexdigest()
-    if ret[3] != hashed_password:
+    # if ret[3] != hashed_password: 20211212 hirayama modified
+    if ret[6] != hashed_password:
         print("password unmatch")
         raise HTTPException(status_code=401, detail='password unmatch')
     return ret
