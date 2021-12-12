@@ -44,15 +44,17 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
 # 入力したパスワード（平文）をハッシュ化して返します。
 def get_users_insert_dict(user):
+    subroutine = "get_users_insert_dict"
+    print("function :" + subroutine)
     pwhash=hashlib.sha256(user.password.encode('utf-8')).hexdigest()
     values=user.dict()
     values.pop("password")
     values["hashed_password"]=pwhash
     return values
 
-def test_dict(user):
-    values=user.dict()
-    return values
+# def test_dict(user):
+#     values=user.dict()
+#     return values
 
 
 # async def create_tokens(database: Database,username: str): 20211212 hirayama modified
@@ -60,6 +62,7 @@ async def create_tokens(database: Database,email: str):
     """パスワード認証を行い、トークンを生成"""
     try:
         subroutine = "create_tokens"
+        print("function :" + subroutine)
         # ペイロード作成
         access_payload = {
             'token_type': 'access_token',
@@ -152,6 +155,7 @@ async def authenticate(database: Database,email: str, password: str):
     print("authenticate user_id:" + str(email))
     try:
         subroutine = "authenticate"
+        print("function :" + subroutine)
         # query = users.select().where(users.columns.username==username) 20211212 hirayama modified
         query = nbmt_users.select().where(nbmt_users.columns.email==email)
         ret = await database.fetch_one(query)
@@ -182,7 +186,7 @@ async def check_privilege(database: Database,email: str):
     """userから権限を取得"""
     try:
         subroutine = "check_privilege"
-        print(subroutine)
+        print("function :" + subroutine)
 
         # DBからユーザーを取得
         # query = users.select().where(users.columns.username==username) 20211212 hirayama modified
@@ -202,7 +206,8 @@ async def get_index(request: Request):
 
 @router.get('/login')
 async def login(request: Request):
-    print("login called")
+    subroutine = "login"
+    print("function :" + subroutine)
     # login画面の表示
     return templates.TemplateResponse('login.html',{'request': request})
 
@@ -493,7 +498,7 @@ async def autocomplete_gettousername(complete_str: str,access_token: str,databas
     # ユーザ名の予測入力機能
     try:
         subroutine = "autocomplete_gettousername"
-        print("/autocomplete-tousername start")
+        print("function :" + subroutine)
         # user = await check_token(access_token , 'access_token')
 
         query = users.select().where(users.c.username.like(complete_str + '%'))
@@ -513,10 +518,11 @@ async def get_token(form: OAuth2PasswordRequestForm = Depends(),db: Database = D
     # トークンを発行します
     try:
         subroutine = "get_token"
-        print("/token start")
+        print("function :" + subroutine)
         user = await authenticate(db, form.username, form.password)
         # print("user:",user[1])
-        token = await create_tokens(db, user[1])
+        # token = await create_tokens(db, user[1]) 20211212 hirayama modified
+        token = await create_tokens(db, user[5])
         print("generated token:",token)
         return token
     except Exception as e:
@@ -528,7 +534,7 @@ async def read_users_me(token: str = Depends(oauth2_scheme),database: Database =
     # アクセストークンを受け取ってカレントユーザを返却します。画面なし、未使用
     try:
         subroutine = "read_users_me"
-        print("/users/me/ start")
+        print("function :" + subroutine)
         user = await get_current_user_from_token(database,token , 'access_token')
         """ログイン中のユーザーを取得"""
         print("user:",user)
@@ -557,7 +563,7 @@ async def read_users_super_del(delete_user: UserUpdate,token: str = Depends(oaut
     # アクセストークンを受け取りスーパーuserの場合ユーザをidで削除します。画面なし、curlから実行
     try:
         subroutine = "read_users_super_del"
-        print("/users/super/del start")
+        print("function :" + subroutine)
         user = await get_current_user_from_token(database,token , 'access_token')
         """ログイン中のユーザーを取得"""
         # print("user:",user)
@@ -580,6 +586,7 @@ async def ConversationListCreate(request: Request,conversation_list: nbtt_conver
     # ConversationListを新規登録します。
     try:
         subroutine = "ConversationListCreate"
+        print("function :" + subroutine)
 
         # user = await check_token(access_token , 'access_token')
         # 現在時間
@@ -667,6 +674,7 @@ async def ConversationListSelect(request: Request,conversation_list: nbtt_conver
     # ConversationListを新規登録します。
     try:
         subroutine = "ConversationListSelect"
+        print("function :" + subroutine)
         # user = await check_token(access_token , 'access_token')
 
         dicts = conversation_list.dict()
@@ -701,6 +709,7 @@ async def ConversationListUpdate(request: Request,conversation_list: nbtt_conver
     # ConversationListを更新します。
     try:
         subroutine = "ConversationListUpdate"
+        print("function :" + subroutine)
         # user = await check_token(access_token , 'access_token')
         # UserId = user.user_id
         UserId = 1
@@ -730,6 +739,7 @@ async def UsersCreate(users: nbmt_usersCreate, database: Database = Depends(get_
     # nbmt_usersを新規登録します。
     try:
         subroutine = "UsersCreate"
+        print("function :" + subroutine)
 
         now = datetime.now()
         print(subroutine + now.strftime('%Y%m%d%H%M%S'))
