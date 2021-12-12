@@ -292,7 +292,8 @@ async def post_pagename(request: Request,pagename: str,access_token: str,param: 
             query = "select row_number() over() as number,* from pointtran"
         else:
             # superuserでない場合、元または先がログインユーザのデータを表示
-            query = "select row_number() over() as number,* from pointtran where from_user_name = '%s' or to_user_name = '%s'"  % (user,user)
+            # query = "select row_number() over() as number,* from pointtran where from_user_name = '%s' or to_user_name = '%s'"  % (user,user) 20211212 hirayama modified
+            query = "select row_number() over() as number,* from pointtran where from_user_name = '%s' or to_user_name = '%s'"  % (email,email)
         if param != "":
             # parameterが設定されている（現在表示NOがある）場合、param以降のデータを表示する
             maxcount = int(param)
@@ -324,7 +325,8 @@ async def post_pagename(request: Request,pagename: str,access_token: str,param: 
         # ポイント送信登録処理、現在の所持ポイント数を表示する為fetchする
         print('this is sendpointtran')
         pointstock = 0
-        query = "select point,version from pointstock where username = '%s' "  % (user)
+        # query = "select point,version from pointstock where username = '%s' "  % (user)  20211212 hirayama modified
+        query = "select point,version from pointstock where username = '%s' "  % (email)
         resultstock = await database.fetch_one(query)
         pointstock = resultstock["point"]
         version = resultstock["version"]
