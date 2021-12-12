@@ -17,10 +17,21 @@ from utils.dbutils import get_connection
 from .models import users
 from .models import pointtran
 from .models import pointstock
+
+# 2021/12/12 Hirayama added start
+from .models import nbtt_conversation_lists
+from .models import nbmt_users
+# 2021/12/12 Hirayama added end
+
 from .schemas import UserCreate, UserUpdate, UserSelect, Token
 from .schemas import PointTranCreate, PointTranUpdate, PointTranSelect
 from .schemas import PointStockCreate, PointStockUpdate, PointStockSelect
 from .schemas import CompleteList
+
+# 2021/12/12 Hirayama added start
+from .schemas import nbtt_user_statusSelect,nbtt_user_statusCreate,nbtt_conversation_listsSelect,nbtt_conversation_listsCreate
+from .schemas import nbmt_usersSelect,nbmt_usersCreate
+# 2021/12/12 Hirayama added end
 
 import shutil
 # new テンプレート関連の設定 (jinja2)
@@ -537,3 +548,155 @@ async def read_users_super_del(delete_user: UserUpdate,token: str = Depends(oaut
     except Exception as e:
         raise HTTPException(status_code=401, detail=subroutine + ":" + str(e))
     return {"result": "delete success"}
+
+# ----------------- 2021/11/24 added
+
+@router.post("/users/ConversationListsCreate", response_model=nbtt_conversation_listsSelect)
+#async def ConversationListCreate(request: Request,access_token: str,nbtt_conversation_list: nbtt_conversation_listCreate, database: Database = Depends(get_connection)):
+async def ConversationListCreate(request: Request,conversation_list: nbtt_conversation_listsCreate, database: Database = Depends(get_connection)):
+    # ConversationListを新規登録します。
+    try:
+        subroutine = "ConversationListCreate"
+
+        # user = await check_token(access_token , 'access_token')
+        # 現在時間
+        now = datetime.now()
+        print(now.strftime('%Y%m%d%H%M%S'))
+
+        # nbtt_conversation_listを作成
+        # values = conversation_list.dict()
+        dicts = conversation_list.dict()
+        values = {
+            "conversation_code": "11111" + now.strftime('%Y%m%d%H%M%S'),
+            "user_id": 1,
+            "start_timestamp": datetime.strptime(dicts["start_timestamp"], '%Y-%m-%d %H:%M:%S'),
+            "scheduled_end_timestamp": datetime.strptime(dicts["scheduled_end_timestamp"], '%Y-%m-%d %H:%M:%S'),
+            "reservation_talking_category": dicts["reservation_talking_category"],
+            "is_deleted": False,
+            "regist_timestamp": now,
+            "regist_user_id": dicts["regist_user_id"],
+            "update_timestamp": datetime.strptime(dicts["update_timestamp"], '%Y-%m-%d %H:%M:%S'),
+            "update_user_id": dicts["update_user_id"]
+        }
+        query = nbtt_conversation_lists.insert() # これはDBの方で、受け取ったパラメータとは別です
+        print("query")  
+
+        # SQLを組み立てる場合はこんな感じになります
+        # query = "INSERT INTO nbtt_conversation_list \
+        #     ( conversation_code,user_id,start_timestamp, \
+        #         scheduled_end_timestamp,reservation_talking_category,is_deleted, \
+        #             regist_timestamp,regist_user_id,update_timestamp,update_user_id) \
+        #                 values \
+        #     ('%s',%s,TO_TIMESTAMP('%s', 'YYYYMMDDHH24MISS'),\
+        #          TO_TIMESTAMP('%s', 'YYYYMMDDHH24MISS'),'%s',%s,\
+        #              TO_TIMESTAMP('%s', 'YYYYMMDDHH24MISS'),%s,TO_TIMESTAMP('%s', 'YYYYMMDDHH24MISS'),%s)" \
+        #     % (entry_data["conversation_code"],\
+        #         entry_data["user_id"],\
+        #         entry_data["start_timestamp"],\
+        #         entry_data["scheduled_end_timestamp"],\
+        #         entry_data["reservation_talking_category"],\
+        #         entry_data["is_deleted"],\
+        #         entry_data["regist_timestamp"],\
+        #         entry_data["regist_user_id"],\
+        #         entry_data["update_timestamp"],\
+        #         entry_data["update_user_id"])
+
+        print(values)
+        ret = await database.execute(query,values)
+
+        # 戻り値は文字列・数値なのでtimestamp項目は文字列フォーマットに変換
+        return_values = {
+            "conversation_code": values["conversation_code"],
+            "user_id": values["user_id"],
+            "start_timestamp": values["start_timestamp"].strftime('%Y-%m-%d %H:%M:%S'),
+            "scheduled_end_timestamp": values["scheduled_end_timestamp"].strftime('%Y-%m-%d %H:%M:%S'),
+            "reservation_talking_category": values["reservation_talking_category"],
+            "is_deleted": values["is_deleted"],
+            "regist_timestamp": values["regist_timestamp"].strftime('%Y-%m-%d %H:%M:%S'),
+            "regist_user_id": values["regist_user_id"],
+            "update_timestamp": values["update_timestamp"].strftime('%Y-%m-%d %H:%M:%S'),
+            "update_user_id": values["update_user_id"]
+        }
+        # for test
+        # {
+        #   "conversation_code": "11111",
+        #   "user_id": 1,
+        #   "start_timestamp": "2021-11-24 19:39:00",
+        #   "scheduled_end_timestamp": "2021-11-24 19:39:01",
+        #   "reservation_talking_category": "reserve",
+        #   "is_deleted": true,
+        #   "regist_timestamp": "2021-11-24 19:39:02",
+        #   "regist_user_id": 2,
+        #   "update_timestamp": "2021-11-24 19:39:03",
+        #   "update_user_id": 3
+        # }
+        return {**return_values}
+    except Exception as e:
+        raise HTTPException(status_code=401, detail=subroutine + ":" + str(e))
+
+# ----------------- 2021/11/25 added
+@router.post("/users/ConversationListsSelect")
+async def ConversationListSelect(request: Request,conversation_list: nbtt_conversation_listsSelect, database: Database = Depends(get_connection)):
+    # user関連情報の受け渡し方法が決定したら修正
+    # 会話相手のデータ検索条件が決定したら修正
+    # エラーコード、HTTPエラーの受け渡し方法が決定したら修正
+
+    # ConversationListを新規登録します。
+    try:
+        subroutine = "ConversationListSelect"
+        # user = await check_token(access_token , 'access_token')
+
+        dicts = conversation_list.dict()
+        values = {
+            "conversation_code": dicts["conversation_code"],
+            "user_id": dicts["user_id"]
+        }
+        if values["conversation_code"] != "": # conversation_codeに値がある場合会話コードで検索する
+            query = nbtt_conversation_lists.select().where(nbtt_conversation_lists.c.conversation_code == values["conversation_code"])
+        elif values["conversation_code"] == "" and values["user_id"] == "myid": # 自分のIDで検索する
+            query = nbtt_conversation_lists.select().where(nbtt_conversation_lists.c.user_id == values["user_id"])
+        else:
+            print("nbtt_conversation_lists.no match") # converasation_codeが空で、ユーザIDが一致しない
+            query = nbtt_conversation_lists.select()
+        print("query:" + str(query))
+        resultset = await database.fetch_all(query)
+        print("resultset:")
+        print(resultset)
+        if len(resultset) == 0: # 件数チェック。結果はlenで取れる
+            print("query no match")
+        return resultset # 正常取得完了
+    except Exception as e:
+        return {"errorcode": 1,"msg": str(e) + "conversation_listでエラーが発生しました。"}
+        # raise HTTPException(status_code=401, detail=subroutine + ":" + str(e))
+
+@router.post("/users/ConversationListsUpdate")
+async def ConversationListUpdate(request: Request,conversation_list: nbtt_conversation_listsSelect, database: Database = Depends(get_connection)):
+    # user関連情報の受け渡し方法が決定したら修正
+    # 会話相手のデータ検索条件が決定したら修正
+    # エラーコード、HTTPエラーの受け渡し方法が決定したら修正
+
+    # ConversationListを更新します。
+    try:
+        subroutine = "ConversationListUpdate"
+        # user = await check_token(access_token , 'access_token')
+        # UserId = user.user_id
+        UserId = 1
+        now = datetime.now()
+        print(now.strftime('%Y%m%d%H%M%S'))
+
+        dicts = conversation_list.dict()
+        values = {
+            "conversation_code": dicts["conversation_code"],
+            "user_id": dicts["user_id"]
+        }
+
+        # conversation_codeのみでupdate対象を決定
+        query = nbtt_conversation_lists.update().where(nbtt_conversation_lists.c.conversation_code == values["conversation_code"]).values(reservation_talking_category="talking",update_timestamp=now,update_user_id=UserId)
+        print("query:" + str(query))
+        resultset = await database.execute(query)
+        # 本当はupdate件数をcheckしたいのだが、出す方法がない(ストアドが必要)
+        return {"result": "update success"} # 正常更新完了
+
+    except Exception as e:
+        return {"errorcode": 1,"msg": str(e) + "conversation_listでエラーが発生しました。"}
+        # raise HTTPException(status_code=401, detail=subroutine + ":" + str(e))
