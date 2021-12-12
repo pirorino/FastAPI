@@ -63,12 +63,14 @@ async def create_tokens(database: Database,username: str):
         access_payload = {
             'token_type': 'access_token',
             'exp': datetime.utcnow() + timedelta(minutes=60),
-            'username': username,
+        #    'username': username, 20211212 hirayama modified
+            'username': email,
         }
         refresh_payload = {
             'token_type': 'refresh_token',
             'exp': datetime.utcnow() + timedelta(days=30),
-            'username': username,
+        #    'username': username, 20211212 hirayama modified
+            'username': email,
         }
 
         # トークン作成
@@ -78,7 +80,8 @@ async def create_tokens(database: Database,username: str):
         # DBにリフレッシュトークンを保存
         # print("username:" + username)
         # print("refresh_token:" + refresh_token)
-        query = users.update().where(users.columns.username==username).values(refresh_token=refresh_token)    
+        # query = users.update().where(users.columns.username==username).values(refresh_token=refresh_token)  20211212 hirayama modified   
+        query = nbmt_users.update().where(nbmt_users.columns.email==email).values(refresh_token=refresh_token)
         ret = await database.execute(query)
 
         print("access_token:" + access_token)
@@ -100,7 +103,8 @@ async def get_current_user_from_token(database: Database,token: str, token_type:
             raise HTTPException(status_code=401, detail=f'token type unmatched')
 
         # DBからユーザーを取得
-        query = users.select().where(users.columns.username==payload['username'])
+        # query = users.select().where(users.columns.username==payload['username'])
+        query = nbmt_users.select().where(nbmt_users.columns.user_id==payload['user_id'])
         user = await database.fetch_one(query)
         print("token_type:",token_type)
 
@@ -124,23 +128,30 @@ async def check_token(token: str, token_type: str):
 
         # print("user_name get")
         # トークンタイプが一致することを確認
-        user_name = payload.get('username')
-        print("user_name:" + user_name)
-        if user_name is None:
+        # user_name = payload.get('username')  20211212 hirayama modified
+        # print("user_name:" + user_name) 20211212 hirayama modified
+        # if user_name is None: 20211212 hirayama modified
+
+        email = payload.get('username')
+        print("email:" + email)
+        if email is None:
             raise HTTPException(status_code=401, detail=f'token user unmatched')
         if payload['token_type'] != token_type:
             raise HTTPException(status_code=401, detail=f'token type unmatched')
-        return user_name
+        # return user_name  20211212 hirayama modified
+        return email
     except Exception as e:
         raise HTTPException(status_code=401, detail=subroutine + ":" + str(e))
 
-async def authenticate(database: Database,username: str, password: str):
+# async def authenticate(database: Database,username: str, password: str): 20211212 hirayama modified
+async def authenticate(database: Database,email: str, password: str):
     # パスワード認証し、userを返します。
     # user = User.get(name=name)
     print("authenticate username:" + username)
     try:
         subroutine = "authenticate"
-        query = users.select().where(users.columns.username==username)
+        # query = users.select().where(users.columns.username==username) 20211212 hirayama modified
+        query = nbmt_users.select().where(nbmt_users.columns.email==email)
         ret = await database.fetch_one(query)
         # print("hashed_password:",ret[3])
         # user = db.query(User).filter(User.email == email).first()
@@ -163,17 +174,21 @@ async def authenticate(database: Database,username: str, password: str):
 
 # curl -X GET "http://localhost:8000/"
 
-async def check_privilege(database: Database,username: str):
+# async def check_privilege(database: Database,username: str): 20211212 hirayama modified
+async def check_privilege(database: Database,email: str):
     """userから権限を取得"""
     try:
         subroutine = "check_privilege"
         print(subroutine)
 
         # DBからユーザーを取得
-        query = users.select().where(users.columns.username==username)
+        # query = users.select().where(users.columns.username==username) 20211212 hirayama modified
+        query = nbmt_users.select().where(nbmt_users.columns.email==email)
         ret = await database.fetch_one(query)
-        # [6]はis_superuser
-        return ret[6]
+        ## [6]はis_superuser 20211212 hirayama modified
+        #return ret[6] 20211212 hirayama modified
+        # [8]はis_superuser
+        return ret[8]
     except Exception as e:
         raise HTTPException(status_code=401, detail=subroutine + ":" + str(e))
 
@@ -250,10 +265,13 @@ async def post_pagename(request: Request,pagename: str,access_token: str,param: 
     print("/pages/" + pagename + " loaded")
 
     # トークンのチェック
-    user = await check_token(access_token , 'access_token')
-    print("user:" + user)
+    # user = await check_token(access_token , 'access_token')  20211212 hirayama modified
+    email = await check_token(access_token , 'access_token')
+    # print("user:" + user)  20211212 hirayama modified
+    print("email:" + email)
     # ユーザの権限チェック
-    is_superuser = await check_privilege(database,user)
+    # is_superuser = await check_privilege(database,user)  20211212 hirayama modified
+    is_superuser = await check_privilege(database,email)
     page_file = pagename + '.html'
     
     print("load /templates/" + page_file)
@@ -332,61 +350,61 @@ async def get_js_auth(request: Request):
     # js_auth.jsは静的ファイルだが、jinja2テンプレートファイルとして配置したので/static/js/以下にない
     return templates.TemplateResponse('js_auth.js',{'request': request})
 
-@router.get("/users/super", response_model=List[UserSelect])
-async def users_findall(token: str = Depends(oauth2_scheme),database: Database = Depends(get_connection)):
-    # superuserの場合、usersを全件検索して「UserSelect」のリストをjsonにして返します。
-    try:
-        subroutine = "users_findall"
-        users = await get_current_user_from_token(database,token , 'access_token')
-        query = users.select()
-        return await database.fetch_all(query)
-    except Exception as e:
-        raise HTTPException(status_code=401, detail=subroutine + ":" + str(e))
+# @router.get("/users/super", response_model=List[UserSelect]) 20211212 hirayama comment out
+# async def users_findall(token: str = Depends(oauth2_scheme),database: Database = Depends(get_connection)):
+#     # superuserの場合、usersを全件検索して「UserSelect」のリストをjsonにして返します。
+#     try:
+#         subroutine = "users_findall"
+#         users = await get_current_user_from_token(database,token , 'access_token')
+#         query = users.select()
+#         return await database.fetch_all(query)
+#     except Exception as e:
+#         raise HTTPException(status_code=401, detail=subroutine + ":" + str(e))
 # curl -X GET "http://localhost:8000/users/super" -H  "accept: application/json" -H  "Content-Type: application/x-www-form-urlencoded" -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzX3Rva2VuIiwiZXhwIjoxNjE0MDY1MTY0LCJ1c2VybmFtZSI6InBpcm9yaW5vIn0.kKFsEqorI_LO16vIbrxPe8C1jsGq9B2rJghVSfaARtE"
 
-@router.get("/users/find", response_model=UserSelect)
-async def users_findone(id: int, database: Database = Depends(get_connection)):
-    # usersをidで検索して「UserSelect」をjsonにして返します。
-    try:
-        subroutine = "users_findone"
-        query = users.select().where(users.columns.id==id)
-        return await database.fetch_one(query)
-    except Exception as e:
-        raise HTTPException(status_code=401, detail=subroutine + ":" + str(e))
+# @router.get("/users/find", response_model=UserSelect) 20211212 hirayama comment out
+# async def users_findone(id: int, database: Database = Depends(get_connection)):
+#     # usersをidで検索して「UserSelect」をjsonにして返します。
+#     try:
+#         subroutine = "users_findone"
+#         query = users.select().where(users.columns.id==id)
+#         return await database.fetch_one(query)
+#     except Exception as e:
+#         raise HTTPException(status_code=401, detail=subroutine + ":" + str(e))
 # http://localhost:8000/users/find?id=1
 
-@router.post("/users/create", response_model=UserSelect)
-async def users_create(user: UserCreate, database: Database = Depends(get_connection)):
-    # usersを新規登録します。curlから実行
-    # validatorは省略
-    try:
-        subroutine = "users_create"
-
-        # usersを作成
-        query = users.insert()
-        values = get_users_insert_dict(user)
-        ret = await database.execute(query, values)
-
-        # pointstockを作成
-        now = datetime.now()
-
-        entry_data = {
-            "username": user.username,
-            "update_datetime": now.strftime('%Y%m%d%H%M%S'),
-            "point": 100,
-            "version": "1",
-            "is_deleted": False
-        }
-        query = "INSERT INTO pointstock \
-            (username,update_datetime, point,version,is_deleted) \
-                values \
-            ('%s',TO_TIMESTAMP('%s', 'YYYYMMDDHH24MISS'),%s,'%s',%s)" \
-            % (entry_data["username"],entry_data["update_datetime"],entry_data["point"],entry_data["version"],entry_data["is_deleted"])
-        print("db exec:" + query)
-        ret = await database.execute(query)
-        return {**user.dict()}
-    except Exception as e:
-        raise HTTPException(status_code=401, detail=subroutine + ":" + str(e))
+@router.post("/users/create", response_model=UserSelect) 20211212 hirayama comment out
+# async def users_create(user: UserCreate, database: Database = Depends(get_connection)):
+#     # usersを新規登録します。curlから実行
+#     # validatorは省略
+#     try:
+#         subroutine = "users_create"
+# 
+#         # usersを作成
+#         query = users.insert()
+#         values = get_users_insert_dict(user)
+#         ret = await database.execute(query, values)
+# 
+#         # pointstockを作成
+#         now = datetime.now()
+# 
+#         entry_data = {
+#             "username": user.username,
+#             "update_datetime": now.strftime('%Y%m%d%H%M%S'),
+#             "point": 100,
+#             "version": "1",
+#             "is_deleted": False
+#         }
+#         query = "INSERT INTO pointstock \
+#             (username,update_datetime, point,version,is_deleted) \
+#                 values \
+#             ('%s',TO_TIMESTAMP('%s', 'YYYYMMDDHH24MISS'),%s,'%s',%s)" \
+#             % (entry_data["username"],entry_data["update_datetime"],entry_data["point"],entry_data["version"],entry_data["is_deleted"])
+#         print("db exec:" + query)
+#         ret = await database.execute(query)
+#         return {**user.dict()}
+#     except Exception as e:
+#         raise HTTPException(status_code=401, detail=subroutine + ":" + str(e))
 # curl -X POST "http://localhost:8000/users/create" -H  "accept: application/json" -H  "Content-Type: application/x-www-form-urlencoded" -d @create_user.json
 # curl -X POST "http://localhost:8000/users/create" -H  "accept: application/json" -H  "Content-Type: application/x-www-form-urlencoded" -d @create_user2.json
 
@@ -700,3 +718,63 @@ async def ConversationListUpdate(request: Request,conversation_list: nbtt_conver
     except Exception as e:
         return {"errorcode": 1,"msg": str(e) + "conversation_listでエラーが発生しました。"}
         # raise HTTPException(status_code=401, detail=subroutine + ":" + str(e))
+
+# ----------------- 2021/12/12 added
+@router.post("/users/UsersCreate", response_model=nbmt_usersSelect)
+async def UsersCreate(users: nbmt_usersCreate, database: Database = Depends(get_connection)):
+    # nbmt_usersを新規登録します。
+    try:
+        subroutine = "UsersCreate"
+
+        now = datetime.now()
+        print(subroutine + now.strftime('%Y%m%d%H%M%S'))
+
+        # user_id は自動インクリメントが必要。
+
+        dicts = users.dict()
+        values = {
+            "user_id": dicts["user_id"],
+            "username_sei": dicts["username_sei"],
+            "username_mei": dicts["username_mei"],
+            "username_sei_kana": dicts["username_sei_kana"],
+            "username_mei_kana": dicts["username_mei_kana"],
+            "email": dicts["email"],
+            "hashed_password": dicts["hashed_password"],
+            "refresh_token": dicts["refresh_token"],
+            "is_superuser": dicts["is_superuser"],
+            "image_id": dicts["image_id"],
+            "IMS_join_year": dicts["IMS_join_year"],
+            "free_comment": dicts["free_comment"],
+            "regist_timestamp": now,
+            "regist_user_id": dicts["regist_user_id"],
+            "update_timestamp": datetime.strptime(dicts["update_timestamp"], '%Y-%m-%d %H:%M:%S'),
+            "update_user_id": dicts["update_user_id"]
+        }
+        query = nbmt_users.insert() # これはDBの方で、受け取ったパラメータとは別です
+        print(subroutine + "query")  
+
+        print(values)
+        ret = await database.execute(query,values)
+
+        # 戻り値は文字列・数値なのでtimestamp項目は文字列フォーマットに変換
+        return_values = {
+            "user_id": values["user_id"],
+            "username_sei": values["username_sei"],
+            "username_mei": values["username_mei"],
+            "username_sei_kana": values["username_sei_kana"],
+            "username_mei_kana": values["username_mei_kana"],
+            "email": values["email"],
+            "hashed_password": values["hashed_password"],
+            "refresh_token": values["refresh_token"],
+            "is_superuser": values["is_superuser"],
+            "image_id": values["image_id"],
+            "IMS_join_year": values["IMS_join_year"],
+            "free_comment": values["free_comment"],
+            "regist_timestamp": values["update_timestamp"].strftime('%Y-%m-%d %H:%M:%S'),
+            "regist_user_id": values["regist_user_id"],
+            "update_timestamp": values["update_timestamp"].strftime('%Y-%m-%d %H:%M:%S'),
+            "update_user_id": values["update_user_id"]
+        }
+        return {**return_values}
+    except Exception as e:
+        raise HTTPException(status_code=401, detail=subroutine + ":" + str(e))
