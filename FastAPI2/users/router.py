@@ -55,7 +55,8 @@ def test_dict(user):
     return values
 
 
-async def create_tokens(database: Database,username: str):
+# async def create_tokens(database: Database,username: str): 20211212 hirayama modified
+async def create_tokens(database: Database,email: str):
     """パスワード認証を行い、トークンを生成"""
     try:
         subroutine = "create_tokens"
@@ -147,7 +148,8 @@ async def check_token(token: str, token_type: str):
 async def authenticate(database: Database,email: str, password: str):
     # パスワード認証し、userを返します。
     # user = User.get(name=name)
-    print("authenticate username:" + username)
+    # print("authenticate username:" + username)
+    print("authenticate user_id:" + str(email))
     try:
         subroutine = "authenticate"
         # query = users.select().where(users.columns.username==username) 20211212 hirayama modified
@@ -373,7 +375,7 @@ async def get_js_auth(request: Request):
 #         raise HTTPException(status_code=401, detail=subroutine + ":" + str(e))
 # http://localhost:8000/users/find?id=1
 
-@router.post("/users/create", response_model=UserSelect) 20211212 hirayama comment out
+#@router.post("/users/create", response_model=UserSelect) 20211212 hirayama comment out
 # async def users_create(user: UserCreate, database: Database = Depends(get_connection)):
 #     # usersを新規登録します。curlから実行
 #     # validatorは省略
