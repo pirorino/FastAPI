@@ -707,30 +707,45 @@ async def ConversationListUpdate(request: Request,conversation_list: nbtt_conver
     # エラーコード、HTTPエラーの受け渡し方法が決定したら修正
 
     # ConversationListを更新します。
+    subroutine = "ConversationListUpdate"
+    print("function :" + subroutine)
+    # user = await check_token(access_token , 'access_token')
+    # UserId = user.user_id
+    # UserId = 1
+    now = datetime.now()
+    print(now.strftime('%Y%m%d%H%M%S'))
+
+    dicts = conversation_list.dict()
+    values = {
+        "conversation_code": dicts["conversation_code"],
+        "user_id": dicts["user_id"],
+        "version_id": dicts["version_id"]
+    }
+
+    transaction = await database.transaction()
     try:
-        subroutine = "ConversationListUpdate"
-        print("function :" + subroutine)
-        # user = await check_token(access_token , 'access_token')
-        # UserId = user.user_id
-        UserId = 1
-        now = datetime.now()
-        print(now.strftime('%Y%m%d%H%M%S'))
+        query1 = "select * from nbtt_conversation_lists where conversation_code = '%s' and version_id = %s for update" % (values["conversation_code"],values["version_id"])
+        print("query1:" + query1)
+        resultset = await database.fetch_all(query1)
+        print("ret1:" + str(resultset))
 
-        dicts = conversation_list.dict()
-        values = {
-            "conversation_code": dicts["conversation_code"],
-            "user_id": dicts["user_id"]
-        }
-
-        # conversation_codeのみでupdate対象を決定
-        query = nbtt_conversation_lists.update().where(nbtt_conversation_lists.c.conversation_code == values["conversation_code"]).values(reservation_talking_category="talking",update_timestamp=now,update_user_id=UserId)
-        print("query:" + str(query))
-        resultset = await database.execute(query)
-        # 本当はupdate件数をcheckしたいのだが、出す方法がない(ストアドが必要)
+        print("query2:start")
+        query2 = "update nbtt_conversation_lists set reservation_talking_category = 'talking' ,version_id= %s where conversation_code = '%s' and version_id = %s returning conversation_code" % (values["version_id"] + 1,values["conversation_code"],values["version_id"])
+        print("query2:" + query2)
+        ret = await database.execute(query2)
+        print("returning:" + str(ret))
+        if ret is None:
+            raise ValueError
+        await transaction.commit()
         return {"result": "update success"} # 正常更新完了
-
-    except Exception as e:
-        return {"errorcode": 1,"msg": str(e) + "conversation_listでエラーが発生しました。"}
+    except ValueError as v: # update失敗（対象なし）
+        print("query:rollbacked")
+        await transaction.rollback()
+        return {"errorcode": 2,"msg": str(v) + " conversation_listでupdate失敗(対象なし)"}
+    except Exception as e: # query失敗（その他のエラー）
+        print("query:rollbacked")
+        await transaction.rollback()
+        return {"errorcode": 1,"msg": str(e) + " conversation_listでエラーが発生しました。"}
         # raise HTTPException(status_code=401, detail=subroutine + ":" + str(e))
 
 # ----------------- 2021/12/12 added
