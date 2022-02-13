@@ -69,7 +69,8 @@ nbtt_conversation_lists = sqlalchemy.Table(
     sqlalchemy.Column("regist_timestamp", sqlalchemy.TIMESTAMP), #登録日
     sqlalchemy.Column("regist_user_id", sqlalchemy.Integer), #登録ユーザID
     sqlalchemy.Column("update_timestamp", sqlalchemy.TIMESTAMP), #更新日
-    sqlalchemy.Column("update_user_id", sqlalchemy.Integer) #更新ユーザID)
+    sqlalchemy.Column("update_user_id", sqlalchemy.Integer), #更新ユーザID)
+    sqlalchemy.Column("version_id", sqlalchemy.Integer) #バージョンID)
 )
 nbmt_users = sqlalchemy.Table(
     "nbmt_users",
