@@ -723,6 +723,7 @@ async def ConversationListUpdate(request: Request,conversation_list: nbtt_conver
     values = {
         "conversation_code": dicts["conversation_code"],
         "user_id": dicts["user_id"],
+        "reservation_talking_category": dicts["reservation_talking_category"],
         "version_id": dicts["version_id"]
     }
 
@@ -734,7 +735,7 @@ async def ConversationListUpdate(request: Request,conversation_list: nbtt_conver
         print("ret1:" + str(resultset))
 
         print("query2:start")
-        query2 = "update nbtt_conversation_lists set reservation_talking_category = 'talking' ,version_id= %s where conversation_code = '%s' and version_id = %s returning conversation_code" % (values["version_id"] + 1,values["conversation_code"],values["version_id"])
+        query2 = "update nbtt_conversation_lists set reservation_talking_category = '%s' ,version_id= %s where conversation_code = '%s' and version_id = %s returning conversation_code" % (values["reservation_talking_category"],values["version_id"] + 1,values["conversation_code"],values["version_id"])
         print("query2:" + query2)
         ret = await database.execute(query2)
         print("returning:" + str(ret))
