@@ -680,25 +680,31 @@ async def ConversationListSelect(request: Request,conversation_list: nbtt_conver
         dicts = conversation_list.dict()
         values = {
             "conversation_code": dicts["conversation_code"],
-            "user_id": dicts["user_id"]
+            "user_id": dicts["user_id"],
+            "to_user_id": dicts["to_user_id"]
         }
         print("conversation_code length:" + str(len(dicts["conversation_code"])))
         print("user_id:" + str(dicts["user_id"]))
-
+        print("to_user_id:" + str(dicts["to_user_id"]))
         now = datetime.now()
+        print(now.strftime('%Y%m%d%H%M%S'))
+
         if len(values["conversation_code"]) != 0: # conversation_codeに値がある場合会話コードで検索する
             query = nbtt_conversation_lists.select().where(nbtt_conversation_lists.c.conversation_code == values["conversation_code"]).where(nbtt_conversation_lists.c.scheduled_end_timestamp > now).where(nbtt_conversation_lists.c.is_deleted == False)
-        elif len(values["conversation_code"]) == 0 and values["user_id"] != 0 : # conversation_codeに値がなく、user_idが0でない場合、受け取ったIDで検索する
+        elif len(values["conversation_code"]) == 0 and values["user_id"] != 0 : # conversation_codeに値がなく、user_idが0でない場合、受け取ったuser_idで検索する
             query = nbtt_conversation_lists.select().where(nbtt_conversation_lists.c.user_id == values["user_id"]).where(nbtt_conversation_lists.c.scheduled_end_timestamp > now).where(nbtt_conversation_lists.c.is_deleted == False)
+        elif len(values["conversation_code"]) == 0 and values["user_id"] == 0 and values["to_user_id"] != 0 : # conversation_codeに値がなく、user_idが0であり、to_user_idが0でない場合、受け取ったto_useridで検索する
+            query = nbtt_conversation_lists.select().where(nbtt_conversation_lists.c.to_user_id == values["to_user_id"]).where(nbtt_conversation_lists.c.scheduled_end_timestamp > now).where(nbtt_conversation_lists.c.is_deleted == False)
         else:
             print("nbtt_conversation_lists.user_id = 0") # converasation_codeが空で、ユーザIDが0の場合
             query = nbtt_conversation_lists.select()
         print("query:" + str(query))
         resultset = await database.fetch_all(query)
-        print("resultset:" + str(resultset[0]["user_id"]))
-        print(resultset)
-        if len(resultset) == 0: # 件数チェック。結果はlenで取れる
-            print("query no match")
+        if len(resultset) > 0:
+            print("resultset:" + str(resultset[0]["user_id"]))
+            print(resultset)
+        else:
+            print("query no match.")
         return resultset # 正常取得完了
     except Exception as e:
         return {"errorcode": 1,"msg": str(e) + "conversation_listでエラーが発生しました。"}
