@@ -597,7 +597,7 @@ async def ConversationListCreate(request: Request,conversation_list: nbtt_conver
         # values = conversation_list.dict()
         dicts = conversation_list.dict()
         values = {
-            "conversation_code": "11111" + now.strftime('%Y%m%d%H%M%S'),
+            "conversation_code": format(dicts["user_id"],'05') + now.strftime('%Y%m%d%H%M%S'),
             "user_id": 1,
             "start_timestamp": datetime.strptime(dicts["start_timestamp"], '%Y-%m-%d %H:%M:%S'),
             "scheduled_end_timestamp": datetime.strptime(dicts["scheduled_end_timestamp"], '%Y-%m-%d %H:%M:%S'),
