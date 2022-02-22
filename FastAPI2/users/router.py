@@ -696,7 +696,7 @@ async def ConversationListSelect(request: Request,conversation_list: nbtt_conver
         elif len(values["conversation_code"]) == 0 and values["user_id"] == 0 and values["to_user_id"] != 0 : # conversation_codeに値がなく、user_idが0であり、to_user_idが0でない場合、受け取ったto_useridで検索する
             query = nbtt_conversation_lists.select().where(nbtt_conversation_lists.c.to_user_id == values["to_user_id"]).where(nbtt_conversation_lists.c.scheduled_end_timestamp > now).where(nbtt_conversation_lists.c.is_deleted == False)
         else:
-            print("nbtt_conversation_lists.user_id = 0") # converasation_codeが空で、ユーザIDが0の場合
+            print("nbtt_conversation_lists..conversation_code ='' user_id = 0 to_user_id = 0") # converasation_codeが空で、ユーザIDが0の場合
             query = nbtt_conversation_lists.select()
         print("query:" + str(query))
         resultset = await database.fetch_all(query)
