@@ -684,10 +684,11 @@ async def ConversationListSelect(request: Request,conversation_list: nbtt_conver
         }
         print("conversation_code length:" + str(len(dicts["conversation_code"])))
         print("user_id:" + str(dicts["user_id"]))
+
+        now = datetime.now()
         if len(values["conversation_code"]) != 0: # conversation_codeに値がある場合会話コードで検索する
-            query = nbtt_conversation_lists.select().where(nbtt_conversation_lists.c.conversation_code == values["conversation_code"]).where(nbtt_conversation_lists.c.is_deleted == False)
+            query = nbtt_conversation_lists.select().where(nbtt_conversation_lists.c.conversation_code == values["conversation_code"]).where(nbtt_conversation_lists.c.scheduled_end_timestamp > now).where(nbtt_conversation_lists.c.is_deleted == False)
         elif len(values["conversation_code"]) == 0 and values["user_id"] != 0 : # conversation_codeに値がなく、user_idが0でない場合、受け取ったIDで検索する
-            now = datetime.now()
             query = nbtt_conversation_lists.select().where(nbtt_conversation_lists.c.user_id == values["user_id"]).where(nbtt_conversation_lists.c.scheduled_end_timestamp > now).where(nbtt_conversation_lists.c.is_deleted == False)
         else:
             print("nbtt_conversation_lists.user_id = 0") # converasation_codeが空で、ユーザIDが0の場合
