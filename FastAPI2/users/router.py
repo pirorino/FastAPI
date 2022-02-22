@@ -671,7 +671,7 @@ async def ConversationListSelect(request: Request,conversation_list: nbtt_conver
     # 会話相手のデータ検索条件が決定したら修正
     # エラーコード、HTTPエラーの受け渡し方法が決定したら修正
 
-    # ConversationListを新規登録します。
+    # 終了予定時間を過ぎていないConversationListを検索します。
     try:
         subroutine = "ConversationListSelect"
         print("function :" + subroutine)
@@ -682,16 +682,19 @@ async def ConversationListSelect(request: Request,conversation_list: nbtt_conver
             "conversation_code": dicts["conversation_code"],
             "user_id": dicts["user_id"]
         }
-        if values["conversation_code"] != "": # conversation_codeに値がある場合会話コードで検索する
-            query = nbtt_conversation_lists.select().where(nbtt_conversation_lists.c.conversation_code == values["conversation_code"])
-        elif values["conversation_code"] == "" and values["user_id"] == "myid": # 自分のIDで検索する
-            query = nbtt_conversation_lists.select().where(nbtt_conversation_lists.c.user_id == values["user_id"])
+        print("conversation_code length:" + str(len(dicts["conversation_code"])))
+        print("user_id:" + str(dicts["user_id"]))
+        if len(values["conversation_code"]) != 0: # conversation_codeに値がある場合会話コードで検索する
+            query = nbtt_conversation_lists.select().where(nbtt_conversation_lists.c.conversation_code == values["conversation_code"]).where(nbtt_conversation_lists.c.is_deleted == False)
+        elif len(values["conversation_code"]) == 0 and values["user_id"] != 0 : # conversation_codeに値がなく、user_idが0でない場合、受け取ったIDで検索する
+            now = datetime.now()
+            query = nbtt_conversation_lists.select().where(nbtt_conversation_lists.c.user_id == values["user_id"]).where(nbtt_conversation_lists.c.scheduled_end_timestamp > now).where(nbtt_conversation_lists.c.is_deleted == False)
         else:
-            print("nbtt_conversation_lists.no match") # converasation_codeが空で、ユーザIDが一致しない
+            print("nbtt_conversation_lists.user_id = 0") # converasation_codeが空で、ユーザIDが0の場合
             query = nbtt_conversation_lists.select()
         print("query:" + str(query))
         resultset = await database.fetch_all(query)
-        print("resultset:")
+        print("resultset:" + str(resultset[0]["user_id"]))
         print(resultset)
         if len(resultset) == 0: # 件数チェック。結果はlenで取れる
             print("query no match")
