@@ -729,19 +729,18 @@ async def ConversationListUpdate(request: Request,conversation_list: nbtt_conver
     values = {
         "conversation_code": dicts["conversation_code"],
         "user_id": dicts["user_id"],
-        "reservation_talking_category": dicts["reservation_talking_category"],
-        "version_id": dicts["version_id"]
+        "reservation_talking_category": dicts["reservation_talking_category"]
     }
 
     transaction = await database.transaction()
     try:
-        query1 = "select * from nbtt_conversation_lists where conversation_code = '%s' and version_id = %s for update" % (values["conversation_code"],values["version_id"])
+        query1 = "select * from nbtt_conversation_lists where conversation_code = '%s' and update_timestamp = '%s' for update" % (values["conversation_code"],values["update_timestamp"])
         print("query1:" + query1)
         resultset = await database.fetch_all(query1)
         print("ret1:" + str(resultset))
 
         print("query2:start")
-        query2 = "update nbtt_conversation_lists set reservation_talking_category = '%s' ,version_id= %s where conversation_code = '%s' and version_id = %s returning conversation_code" % (values["reservation_talking_category"],values["version_id"] + 1,values["conversation_code"],values["version_id"])
+        query2 = "update nbtt_conversation_lists set reservation_talking_category = '%s' ,update_timestamp= '%s' where conversation_code = '%s' and update_timestamp = '%s' returning conversation_code" % (values["reservation_talking_category"],now.strftime('%Y-%m-%d %H:%M:%S'),values["conversation_code"],values["update_timestamp"])
         print("query2:" + query2)
         ret = await database.execute(query2)
         print("returning:" + str(ret))
