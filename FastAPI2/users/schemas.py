@@ -116,7 +116,6 @@ class nbtt_conversation_listsSelect(BaseModel):
     regist_user_id: str
     update_timestamp: str
     update_user_id: str
-    version_id: int
 
 class nbtt_conversation_listsCreate(BaseModel):
     conversation_code: str
@@ -129,7 +128,7 @@ class nbtt_conversation_listsCreate(BaseModel):
     regist_user_id: int
     update_timestamp: str
     update_user_id: int
-    version_id: int
+
 # ----- 2021/12/05 update
 class nbmt_usersCreate(BaseModel):
     user_id: int
