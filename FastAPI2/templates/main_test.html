@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<!-- jQuery --> 
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <link rel="stylesheet" href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/themes/ui-lightness/jquery-ui.css"/>
+<!-- jQuery UI -->
+    <script src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+    <meta charset="UTF-8">
+    <title>FastAPI Sample Application</title>
+</head>
+<body>
+<div style="display: flex; flex-direction: column; min-height: 80vh">
+    <div class="container">
+<!-- kokokara -->
+<div class="row row-cols-1 row-cols-md-3 g-4" id="h-all">
+  <div class="col" id="h-100">
+    <div class="card h-100">
+      <img src="..." class="card-img-top" alt="...">
+      <div class="card-body">
+        <h5 class="card-title">Card title</h5>
+        <p class="card-text">This is a wider card with supporting text below as a natural lead-in to additional content. This content is a little bit longer.</p>
+      </div>
+      <div class="card-footer">
+        <small class="text-muted">Last updated 3 mins ago</small>
+      </div>
+    </div>
+  </div>
+  <div class="col" id="h-200">
+    <div class="card h-200">
+      <img src="..." class="card-img-top" alt="...">
+      <div class="card-body">
+        <h5 class="card-title">Card title</h5>
+        <p class="card-text">This card has supporting text below as a natural lead-in to additional content.</p>
+        <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#exampleModal">
+          Launch demo modal
+        </button>
+              </div>
+      <div class="card-footer">
+        <small class="text-muted">Last updated 3 mins ago</small>
+      </div>
+    </div>
+  </div>
+  <div class="col">
+    <div class="card h-100">
+      <img src="..." class="card-img-top" alt="...">
+      <div class="card-body">
+        <h5 class="card-title">Card title</h5>
+        <p class="card-text">This is a wider card with supporting text below as a natural lead-in to additional content. This card has even longer content than the first to show that equal height action.</p>
+      </div>
+      <div class="card-footer">
+        <small class="text-muted">Last updated 3 mins ago</small>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- kokomade -->
+    </div>
+</div>
+<!-- Modal -->
+<div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="exampleModalLabel">Modal title</h5>
+        <button type="button" class="btn-close" data-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        ...
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-primary">Save changes</button>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- kokomade -->
+<br>
+<hr>
+<button id="button">要素を消す</button>
+<script>
+  $("#button").on("click", function(){
+  $("#h-all").empty();
+});
+</script>
+
+<footer>
+    <div align="right">
+        <p>FastAPI test</p>
+    </div>
+</footer>
+<script type="text/javascript" src="/static/js/js_auth"></script>
+</body>
+<button type="button" class="btn btn-outline-primary" onClick="getConversationLists()">convlist get</button> 
+
+<!-- 追加するjs関数 -->
+<script>
+  async function getConversationLists(data){
+    token = sessionStorage.getItem("TOKEN");    //セッションに保存
+    var fetch_url = 'http://' + location.host + '/users/ConversationListsSelect?access_token=';
+    data = {
+      "conversation_code": "",
+      "user_id": 1,
+      "to_user_id": 1,
+      "start_timestamp": "",
+      "scheduled_end_timestamp": "",
+      "reservation_talking_category": "",
+      "is_deleted": true,
+      "regist_timestamp": "",
+      "regist_user_id": "",
+      "update_timestamp": "",
+      "update_user_id": ""
+    }
+    return await fetch(fetch_url + token,
+    {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'accept': 'application/json'
+        },
+        body: JSON.stringify(data)
+    })
+    .then(response => {
+        if( response.status === 200 ){
+            return response.json();
+        } else if (response.status === 401 ){
+            return response.json();
+        } else {
+          throw new Error(response.json());
+        }
+    })
+    .then(function(json){
+      $("#h-all").empty();
+            for(var i = 0; i < json.length; i++){
+              var h = '<div class="col" id="h-100">'
+                    + '    <div class="card h-100">'
+                    + json[i].user_id
+                    + '      <img src="..." class="card-img-top" alt="...">'
+                    + '      <div class="card-body">'
+                    + '        <h5 class="card-title">会話予定</h5>'
+                    + '        <p class="card-text">'
+                    + '開始時刻:' + json[i].start_timestamp
+                    + '        </p>'
+                    + '        <p class="card-text">'
+                    + '状態:' + json[i].reservation_talking_category
+                    + '        </p>'
+                    + '      </div>'
+                    + '      <div class="card-footer">'
+                    + '        <small class="text-muted">' + json[i].scheduled_end_timestamp + '</small>'
+                    + '      </div>'
+                    + '    </div>'
+                    + '    <button type="button" class="btn btn-outline-primary" id="' + json[i].conversation_code + '" value="' + json[i].update_timestamp + '" onClick="ConversationListsUpdate(this.id,this.value)">申し込む</button> '
+                    + '  </div>'
+              $("#h-all").append(h);
+            }
+    })
+    .catch(err => {
+        console.log(err);
+        return err;
+    })
+}
+</script>
+<script>
+  async function ConversationListsUpdate(conversation_code,update_timestamp){
+    token = sessionStorage.getItem("TOKEN");    //セッションに保存
+    var fetch_url = 'http://' + location.host + '/users/ConversationListsUpdate?access_token=';
+    data = {
+      "conversation_code": conversation_code,
+      "user_id": 0,
+      "to_user_id": 0,
+      "start_timestamp": "",
+      "scheduled_end_timestamp": "",
+      "reservation_talking_category": "accept",
+      "is_deleted": true,
+      "regist_timestamp": "",
+      "regist_user_id": "",
+      "update_timestamp": update_timestamp,
+      "update_user_id": ""
+  }
+    return await fetch(fetch_url + token,
+    {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'accept': 'application/json'
+        },
+        body: JSON.stringify(data)
+    })
+    .then(response => {
+        if( response.status === 200 ){
+            return response.json();
+        } else if (response.status === 401 ){
+            return response.json();
+        } else {
+          throw new Error(response.json());
+        }
+    })
+    .then(function(json){
+      $("#h-all").empty();
+            for(var i = 0; i < json.length; i++){
+              var h = '<div class="col" id="h-100">'
+                    + '    <div class="card h-100">'
+                    + json[i].user_id
+                    + '      <img src="..." class="card-img-top" alt="...">'
+                    + '      <div class="card-body">'
+                    + '        <h5 class="card-title">会話予定</h5>'
+                    + '        <p class="card-text">'
+                    + '開始時刻:' + json[i].start_timestamp
+                    + '        </p>'
+                    + '        <p class="card-text">'
+                    + '状態:' + json[i].reservation_talking_category
+                    + '        </p>'
+                    + '      </div>'
+                    + '      <div class="card-footer">'
+                    + '        <small class="text-muted">' + json[i].scheduled_end_timestamp + '</small>'
+                    + '      </div>'
+                    + '    </div>'
+                    + '  </div>'
+              $("#h-all").append(h);
+            }
+    })
+    .catch(err => {
+        console.log(err);
+        return err;
+    })
+}
+</script>
+<!-- 追加すべきもの
+$('.col').append($ele.clone());
+$("#button").on("click", function(){
+  $("#parent").empty();
+});
+const from_json = JSON.parse(json_string);
+-->
+</html>
