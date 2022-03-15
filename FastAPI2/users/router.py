@@ -666,7 +666,7 @@ async def ConversationListCreate(request: Request,conversation_list: nbtt_conver
 
 # ----------------- 2021/11/25 added
 @router.post("/users/ConversationListsSelect")
-async def ConversationListSelect(request: Request,conversation_list: nbtt_conversation_listsSelect, database: Database = Depends(get_connection)):
+async def ConversationListSelect(request: Request,access_token: str,conversation_list: nbtt_conversation_listsSelect, database: Database = Depends(get_connection)):
     # user関連情報の受け渡し方法が決定したら修正
     # 会話相手のデータ検索条件が決定したら修正
     # エラーコード、HTTPエラーの受け渡し方法が決定したら修正
@@ -675,7 +675,7 @@ async def ConversationListSelect(request: Request,conversation_list: nbtt_conver
     try:
         subroutine = "ConversationListSelect"
         print("function :" + subroutine)
-        # user = await check_token(access_token , 'access_token')
+        user = await check_token(access_token , 'access_token')
 
         dicts = conversation_list.dict()
         values = {
@@ -711,7 +711,7 @@ async def ConversationListSelect(request: Request,conversation_list: nbtt_conver
         # raise HTTPException(status_code=401, detail=subroutine + ":" + str(e))
 
 @router.post("/users/ConversationListsUpdate")
-async def ConversationListUpdate(request: Request,conversation_list: nbtt_conversation_listsSelect, database: Database = Depends(get_connection)):
+async def ConversationListUpdate(request: Request,access_token: str,conversation_list: nbtt_conversation_listsSelect, database: Database = Depends(get_connection)):
     # user関連情報の受け渡し方法が決定したら修正
     # 会話相手のデータ検索条件が決定したら修正
     # エラーコード、HTTPエラーの受け渡し方法が決定したら修正
@@ -719,7 +719,7 @@ async def ConversationListUpdate(request: Request,conversation_list: nbtt_conver
     # ConversationListを更新します。
     subroutine = "ConversationListUpdate"
     print("function :" + subroutine)
-    # user = await check_token(access_token , 'access_token')
+    user = await check_token(access_token , 'access_token')
     # UserId = user.user_id
     # UserId = 1
     now = datetime.now()
