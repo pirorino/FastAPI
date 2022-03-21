@@ -11,100 +11,53 @@
     <meta charset="UTF-8">
     <title>FastAPI Sample Application</title>
 </head>
+
 <body>
 <div style="display: flex; flex-direction: column; min-height: 80vh">
     <div class="container">
 <!-- kokokara -->
-<div class="row row-cols-1 row-cols-md-3 g-4" id="h-all">
-  <div class="col" id="h-100">
-    <div class="card h-100">
-      <img src="..." class="card-img-top" alt="...">
-      <div class="card-body">
-        <h5 class="card-title">Card title</h5>
-        <p class="card-text">This is a wider card with supporting text below as a natural lead-in to additional content. This content is a little bit longer.</p>
-      </div>
-      <div class="card-footer">
-        <small class="text-muted">Last updated 3 mins ago</small>
-      </div>
-    </div>
-  </div>
-  <div class="col" id="h-200">
-    <div class="card h-200">
-      <img src="..." class="card-img-top" alt="...">
-      <div class="card-body">
-        <h5 class="card-title">Card title</h5>
-        <p class="card-text">This card has supporting text below as a natural lead-in to additional content.</p>
-        <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#exampleModal">
-          Launch demo modal
-        </button>
-              </div>
-      <div class="card-footer">
-        <small class="text-muted">Last updated 3 mins ago</small>
-      </div>
-    </div>
-  </div>
-  <div class="col">
-    <div class="card h-100">
-      <img src="..." class="card-img-top" alt="...">
-      <div class="card-body">
-        <h5 class="card-title">Card title</h5>
-        <p class="card-text">This is a wider card with supporting text below as a natural lead-in to additional content. This card has even longer content than the first to show that equal height action.</p>
-      </div>
-      <div class="card-footer">
-        <small class="text-muted">Last updated 3 mins ago</small>
-      </div>
-    </div>
-  </div>
-</div>
+      <div class="row row-cols-1 row-cols-md-3 g-4" id="h-all">test</div>
 <!-- kokomade -->
-    </div>
-</div>
-<!-- Modal -->
-<div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="exampleModalLabel">Modal title</h5>
-        <button type="button" class="btn-close" data-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <div class="modal-body">
-        ...
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
         <button type="button" class="btn btn-primary">Save changes</button>
-      </div>
     </div>
-  </div>
 </div>
-<!-- kokomade -->
 <br>
 <hr>
-<button id="button">要素を消す</button>
 <script>
   $("#button").on("click", function(){
   $("#h-all").empty();
 });
 </script>
 
+<!-- モーダルウインドウの切り替えボタンの設定 -->
+<!-- button type="button" class="btn btn-primary" data-toggle="modal" data-target="#exampleModal">
+  押すと表示されます。
+</button -->
+
 <footer>
-    <div align="right">
+    <div align="center">
         <p>FastAPI test</p>
     </div>
 </footer>
 <script type="text/javascript" src="/static/js/js_auth"></script>
 </body>
-<button type="button" class="btn btn-outline-primary" onClick="getConversationLists()">convlist get</button> 
+<!-- button type="button" class="btn btn-outline-primary" onClick="getConversationLists()">convlist get</button> -->
 
 <!-- 追加するjs関数 -->
 <script>
+  var proposal_user = 0; // 申し込み元ユーザ
+  var onpolling = 0; // ポーリング可能状態=0
   async function getConversationLists(data){
     token = sessionStorage.getItem("TOKEN");    //セッションに保存
     var fetch_url = 'http://' + location.host + '/users/ConversationListsSelect?access_token=';
+    if (onpolling !=0 ){
+      return;
+    };
+    onpolling = 1;
     data = {
       "conversation_code": "",
-      "user_id": 1,
-      "to_user_id": 1,
+      "user_id": 0,
+      "to_user_id": 2,
       "start_timestamp": "",
       "scheduled_end_timestamp": "",
       "reservation_talking_category": "",
@@ -134,27 +87,36 @@
     })
     .then(function(json){
       $("#h-all").empty();
-            for(var i = 0; i < json.length; i++){
-              var h = '<div class="col" id="h-100">'
-                    + '    <div class="card h-100">'
-                    + json[i].user_id
-                    + '      <img src="..." class="card-img-top" alt="...">'
-                    + '      <div class="card-body">'
-                    + '        <h5 class="card-title">会話予定</h5>'
-                    + '        <p class="card-text">'
-                    + '開始時刻:' + json[i].start_timestamp
-                    + '        </p>'
-                    + '        <p class="card-text">'
-                    + '状態:' + json[i].reservation_talking_category
-                    + '        </p>'
-                    + '      </div>'
-                    + '      <div class="card-footer">'
-                    + '        <small class="text-muted">' + json[i].scheduled_end_timestamp + '</small>'
-                    + '      </div>'
-                    + '    </div>'
-                    + '    <button type="button" class="btn btn-outline-primary" id="' + json[i].conversation_code + '" value="' + json[i].update_timestamp + '" onClick="ConversationListsUpdate(this.id,this.value)">申し込む</button> '
-                    + '  </div>'
+            // for(var i = 0; i < json.length; i++){
+              for(var i = 0; i < 1; i++){
+              // var h = '<div class="col" id="h-100">'
+                proposal_user = json[i].user_id
+                 h = '<div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">'
+                      + '  <div class="modal-dialog">'
+                      + '    <div class="modal-content">'
+                      + '      <div class="modal-header">'
+                      + '        <h5 class="modal-title" id="exampleModalLabel">会話申し込みがありました</h5>'
+                      + '        <button type="button" class="btn-close" data-dismiss="modal" aria-label="Close"></button>'
+                      + '      </div>'
+                      + '      <div class="modal-body">'
+                      + proposal_user + 'さんから会話申し込みがありました'
+                      + '      </div>'
+                      + '        <p class="card-text">'
+                      + '開始時刻:' + json[i].start_timestamp
+                      + '        </p>'
+                      + '        <p class="card-text">'
+                      + '状態:' + json[i].reservation_talking_category
+                      + '        </p>'
+                      + '        <small class="text-muted">' + json[i].scheduled_end_timestamp + '</small>'
+                      + '      <div class="modal-footer">'
+                      + '        <button type="button" class="btn btn-outline-primary" id="' + json[i].conversation_code + '" value="' + json[i].update_timestamp + '" onClick="ConversationListsUpdate(this.id,this.value)">受け入れる</button> '
+                      + '        <button type="button" class="btn btn-secondary" data-dismiss="modal">ごめん</button>'
+                      + '      </div>'
+                      + '    </div>'
+                      + '  </div>'
+                      + '</div>'
               $("#h-all").append(h);
+              $('#exampleModal').modal()
             }
     })
     .catch(err => {
@@ -162,9 +124,9 @@
         return err;
     })
 }
-</script>
-<script>
-  async function ConversationListsUpdate(conversation_code,update_timestamp){
+
+// モーダルで会話申し込みに対し受け入れを押した後に実行
+ async function ConversationListsUpdate(conversation_code,update_timestamp){
     token = sessionStorage.getItem("TOKEN");    //セッションに保存
     var fetch_url = 'http://' + location.host + '/users/ConversationListsUpdate?access_token=';
     data = {
@@ -200,26 +162,27 @@
     })
     .then(function(json){
       $("#h-all").empty();
-            for(var i = 0; i < json.length; i++){
-              var h = '<div class="col" id="h-100">'
-                    + '    <div class="card h-100">'
-                    + json[i].user_id
-                    + '      <img src="..." class="card-img-top" alt="...">'
-                    + '      <div class="card-body">'
-                    + '        <h5 class="card-title">会話予定</h5>'
-                    + '        <p class="card-text">'
-                    + '開始時刻:' + json[i].start_timestamp
-                    + '        </p>'
-                    + '        <p class="card-text">'
-                    + '状態:' + json[i].reservation_talking_category
-                    + '        </p>'
-                    + '      </div>'
-                    + '      <div class="card-footer">'
-                    + '        <small class="text-muted">' + json[i].scheduled_end_timestamp + '</small>'
-                    + '      </div>'
-                    + '    </div>'
-                    + '  </div>'
+            // for(var i = 0; i < json.length; i++){
+            for(var i = 0; i < 1; i++){
+              // var h = '<div class="col" id="h-100">'
+                var h = '<div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">'
+                      + '  <div class="modal-dialog">'
+                      + '    <div class="modal-content">'
+                      + '      <div class="modal-header">'
+                      + '        <h5 class="modal-title" id="exampleModalLabel">会話申し込み完了</h5>'
+                      + '        <button type="button" class="btn-close" data-dismiss="modal" aria-label="Close"></button>'
+                      + '      </div>'
+                      + '      <div class="modal-body">'
+                      + proposal_user + 'さんからの会話を受け付けました'
+                      + '      </div>'
+                      + '      <div class="modal-footer">'
+                      + '        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>'
+                      + '      </div>'
+                      + '    </div>'
+                      + '  </div>'
+                      + '</div>'
               $("#h-all").append(h);
+              $('#exampleModal').modal()
             }
     })
     .catch(err => {
@@ -227,12 +190,28 @@
         return err;
     })
 }
+
+ // ポーリング処理本体、10秒ごとにポーリングしgetConversationLists実行
+ async function ConversationPolling(){
+    const intervalMs = 10000;
+    // インターバルだけ待ってgetConversationListsをselectするPromiseを作成するヘルパメソッド
+    const sleep = (milliSeconds) => new Promise(resolve => {
+      setTimeout(() => resolve(getConversationLists()), milliSeconds);
+    });
+  
+    const wait = async () => {
+      while (true) {
+        const talkInSleep = await sleep(intervalMs);
+        console.log(talkInSleep);
+      }
+    };
+  
+  wait();
+ };
+
+ // 画面起動後にポーリング処理実行開始
+ // window.onload = ConversationPolling();
+ window.onload = getConversationLists();
+
 </script>
-<!-- 追加すべきもの
-$('.col').append($ele.clone());
-$("#button").on("click", function(){
-  $("#parent").empty();
-});
-const from_json = JSON.parse(json_string);
--->
 </html>
