@@ -581,14 +581,14 @@ async def read_users_super_del(delete_user: UserUpdate,token: str = Depends(oaut
 # ----------------- 2021/11/24 added
 
 @router.post("/users/ConversationListsCreate", response_model=nbtt_conversation_listsSelect)
-#async def ConversationListCreate(request: Request,access_token: str,nbtt_conversation_list: nbtt_conversation_listCreate, database: Database = Depends(get_connection)):
-async def ConversationListCreate(request: Request,conversation_list: nbtt_conversation_listsCreate, database: Database = Depends(get_connection)):
+async def ConversationListCreate(request: Request,access_token: str,conversation_list: nbtt_conversation_listsCreate, database: Database = Depends(get_connection)):
+#async def ConversationListCreate(request: Request,conversation_list: nbtt_conversation_listsCreate, database: Database = Depends(get_connection)):
     # ConversationListを新規登録します。
     try:
         subroutine = "ConversationListCreate"
         print("function :" + subroutine)
 
-        # user = await check_token(access_token , 'access_token')
+        user = await check_token(access_token , 'access_token')
         # 現在時間
         now = datetime.now()
         print(now.strftime('%Y%m%d%H%M%S'))
