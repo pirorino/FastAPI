@@ -351,7 +351,7 @@
 }
 
 // こちらから申し込む場合に、申し込みに対して相手から返事が来るか待っている場合の検索処理（冗長な可能性あり）
-async function getRequestConversationList(conversation_id,proposed_user){
+async function getRequestConversationLists(conversation_id,proposed_username){
     token = sessionStorage.getItem("TOKEN");    //セッションに保存
     var fetch_url = 'http://' + location.host + '/users/ConversationListsSelect?access_token=';
     data = {
@@ -387,8 +387,8 @@ async function getRequestConversationList(conversation_id,proposed_user){
     })
     .then(function(json){
       $("#requestModal-all").empty();
-            if (json[i].reservation_talking_category ="accepted"){
-                proposal_user = json[i].user_id
+            if (json.reservation_talking_category ="accepted"){
+                proposal_user = json.user_id
                  h = '<div class="modal fade" id="requestModal" tabindex="-1" aria-labelledby="requestModalLabel" aria-hidden="true">'
                       + '  <div class="modal-dialog">'
                       + '    <div class="modal-content">'
@@ -399,9 +399,9 @@ async function getRequestConversationList(conversation_id,proposed_user){
                       + '      <div class="modal-body">'
                       + proposed_user + 'より申し込みが受けつけられました'
                       + '      </div>'
-                      + '        <small class="text-muted">' + json[i].scheduled_end_timestamp + '</small>'
+                      + '        <small class="text-muted">' + json.scheduled_end_timestamp + '</small>'
                       + '      <div class="modal-footer">'
-                      + '        <button type="button" class="btn btn-outline-primary" id="' + json[i].conversation_code + '" value="' + json[i].update_timestamp + '" onClick="StartTalking(this.id,this.value)">トークを開始する</button> '
+                      + '        <button type="button" class="btn btn-outline-primary" id="' + json.conversation_code + '" value="' + json.update_timestamp + '" onClick="StartTalking(this.id,this.value)">トークを開始する</button> '
                       + '      </div>'
                       + '    </div>'
                       + '  </div>'
@@ -418,7 +418,11 @@ async function getRequestConversationList(conversation_id,proposed_user){
     })
 }
 
-// 通常のリクエスト待ちポーリング処理本体、10秒ごとにポーリングしgetConversationLists実行
+// トーク開始。未実装
+async function StartTalking(conversation_id,update_timestamp){
+}
+
+// リクエスト受付をチェックする為のポーリング処理本体、10秒ごとにポーリングしgetConversationLists実行
  async function RequestedPolling(conversation_id){
     const intervalMs = 10000;
     // インターバルだけ待ってgetConversationListsをselectするPromiseを作成するヘルパメソッド
@@ -436,12 +440,12 @@ async function getRequestConversationList(conversation_id,proposed_user){
   wait();
  };
 
-  // リクエスト中ポーリング処理本体、10秒ごとにポーリングしgetConversationLists実行
-  async function RequestPolling(conversation_id,proposed_user){
+  // こちからのリクエストの応答を待つポーリング処理本体、10秒ごとにポーリングしgetConversationLists実行
+  async function RequestPolling(conversation_id,proposed_username){
     const intervalMs = 10000;
     // インターバルだけ待ってgetConversationListsをselectするPromiseを作成するヘルパメソッド
     const sleep = (milliSeconds) => new Promise(resolve => {
-      setTimeout(() => resolve(getRequestedConversationLists(conversation_id,proposed_user)), milliSeconds);
+      setTimeout(() => resolve(getRequestConversationLists(conversation_id,proposed_username)), milliSeconds);
     });
   
     const wait = async () => {
