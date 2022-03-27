@@ -596,16 +596,29 @@ async def ConversationListCreate(request: Request,access_token: str,conversation
         # nbtt_conversation_listを作成
         # values = conversation_list.dict()
         dicts = conversation_list.dict()
+        endtime = datetime.strptime(dicts["scheduled_end_timestamp"], '%Y-%m-%d %H:%M:%S')
+        conversation_time = datetime.strptime(dicts["scheduled_end_timestamp"], '%Y-%m-%d %H:%M:%S') - datetime.strptime(dicts["start_timestamp"], '%Y-%m-%d %H:%M:%S')
+        starttime = now
+        scheduled_end_timestamp = now + conversation_time
+        print("time:")
+        print(starttime.strftime('%Y-%m-%d %H:%M:%S'))
+        print("now:")
+        print(starttime)
+        print(datetime.strptime(starttime.strftime('%Y-%m-%d %H:%M:%S'),'%Y-%m-%d %H:%M:%S'))
         values = {
             "conversation_code": format(dicts["user_id"],'05') + now.strftime('%Y%m%d%H%M%S'),
             "user_id": 1,
-            "start_timestamp": datetime.strptime(dicts["start_timestamp"], '%Y-%m-%d %H:%M:%S'),
-            "scheduled_end_timestamp": datetime.strptime(dicts["scheduled_end_timestamp"], '%Y-%m-%d %H:%M:%S'),
+        #    "start_timestamp": datetime.strptime(dicts["start_timestamp"], '%Y-%m-%d %H:%M:%S'),
+            "start_timestamp": starttime,
+        #    "scheduled_end_timestamp": datetime.strptime(dicts["scheduled_end_timestamp"], '%Y-%m-%d %H:%M:%S'),
+            "scheduled_end_timestamp": scheduled_end_timestamp,
             "reservation_talking_category": dicts["reservation_talking_category"],
             "is_deleted": False,
-            "regist_timestamp": now,
+        #    "regist_timestamp": now,2022/3/27 modified
+            "regist_timestamp": datetime.strptime(starttime.strftime('%Y-%m-%d %H:%M:%S'),'%Y-%m-%d %H:%M:%S'),
             "regist_user_id": dicts["regist_user_id"],
-            "update_timestamp": datetime.strptime(dicts["update_timestamp"], '%Y-%m-%d %H:%M:%S'),
+        #    "update_timestamp": now, 2022/3/27 modified
+            "update_timestamp": datetime.strptime(starttime.strftime('%Y-%m-%d %H:%M:%S'),'%Y-%m-%d %H:%M:%S'),
             "update_user_id": dicts["update_user_id"]
         }
         query = nbtt_conversation_lists.insert() # これはDBの方で、受け取ったパラメータとは別です
@@ -694,7 +707,25 @@ async def ConversationListSelect(request: Request,access_token: str,conversation
         elif len(values["conversation_code"]) == 0 and values["user_id"] != 0 : # conversation_codeに値がなく、user_idが0でない場合、受け取ったuser_idで検索する
             query = nbtt_conversation_lists.select().where(nbtt_conversation_lists.c.user_id == values["user_id"]).where(nbtt_conversation_lists.c.scheduled_end_timestamp > now).where(nbtt_conversation_lists.c.is_deleted == False)
         elif len(values["conversation_code"]) == 0 and values["user_id"] == 0 and values["to_user_id"] != 0 : # conversation_codeに値がなく、user_idが0であり、to_user_idが0でない場合、受け取ったto_useridで検索する
-            query = nbtt_conversation_lists.select().where(nbtt_conversation_lists.c.to_user_id == values["to_user_id"]).where(nbtt_conversation_lists.c.scheduled_end_timestamp > now).where(nbtt_conversation_lists.c.is_deleted == False)
+            # 2022/3/27 added start
+            # query = nbtt_conversation_lists.select().where(nbtt_conversation_lists.c.to_user_id == values["to_user_id"]).where(nbtt_conversation_lists.c.scheduled_end_timestamp > now).where(nbtt_conversation_lists.c.is_deleted == False)
+            query = "SELECT \
+                    c.conversation_code,\
+                    c.user_id,\
+                    c.start_timestamp,\
+                    c.scheduled_end_timestamp,\
+                    c.reservation_talking_category,\
+                    c.is_deleted,\
+                    c.regist_timestamp,\
+                    c.regist_user_id,\
+                    c.update_timestamp,\
+                    c.update_user_id,\
+                    n.username_sei,\
+                    n.username_mei\
+                    FROM nbtt_conversation_list c INNER JOIN nbmt_users n \
+                    WHERE c.to_user_id = n.user_id and c.scheduled_end_timestamp > %s and c.is_deleted == False"\
+                % (now,values["to_user_id"])
+            # 2022/3/27 added end
         else:
             print("nbtt_conversation_lists..conversation_code ='' user_id = 0 to_user_id = 0") # converasation_codeが空で、ユーザIDが0の場合
             query = nbtt_conversation_lists.select()
