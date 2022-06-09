@@ -87,10 +87,15 @@ async def create_tokens(database: Database,email: str):
         # query = users.update().where(users.columns.username==username).values(refresh_token=refresh_token)  20211212 hirayama modified   
         query = nbmt_users.update().where(nbmt_users.columns.email==email).values(refresh_token=refresh_token)
         ret = await database.execute(query)
+        # 繝ｦ繝ｼ繧ｶID繧りｿ斐☆繧医≧縺ｫ螟画峩
+        user = await get_user_info(database, email)
+        UserId = user[0]
+        print("UserId:" + str(UserId))
 
         print("access_token:" + access_token)
         print("refresh_token:" + refresh_token)
-        return {'access_token': access_token, 'refresh_token': refresh_token, 'token_type': 'bearer'}
+        return {'access_token': access_token, 'refresh_token': refresh_token, 'userId': str(UserId), 'token_type': 'bearer'}
+        # return {'access_token': access_token, 'refresh_token': refresh_token, 'token_type': 'bearer'}
     except Exception as e:
         raise HTTPException(status_code=401, detail=subroutine + ":" + str(e))
 
@@ -199,6 +204,44 @@ async def check_privilege(database: Database,email: str):
     except Exception as e:
         raise HTTPException(status_code=401, detail=subroutine + ":" + str(e))
 
+async def get_user_info(database: Database,email: str): #20211229 komata modified
+    # """email縺九ｉuser諠??ｱ繧貞叙蠕?"""
+    try:
+        subroutine = "get_user_info"
+        print("function :" + subroutine)
+
+        # DB縺九ｉ繝ｦ繝ｼ繧ｶ繝ｼ繧貞叙蠕?
+        query = nbmt_users.select().where(nbmt_users.columns.email==email)
+        query.compile(compile_kwargs={"literal_binds": True})
+        ret = await database.fetch_one(query)
+        return ret
+    except Exception as e:
+        raise HTTPException(status_code=401, detail=subroutine + ":" + str(e))
+
+async def set_user_info(database: Database,email: str): #20220121 komata modified
+    try:
+        subroutine = "set_user_info"
+        query = nbmt_users.update().where(nbmt_users.columns.email==email).values(refresh_token=refresh_token)
+        ret = await database.execute(query)
+    except Exception as e:
+        raise HTTPException(status_code=401, detail=subroutine + ":" + str(e))
+
+async def get_max_userID(database: Database):
+    # 繝ｦ繝ｼ繧ｶ繝??繝悶Ν縺九ｉ縲∵怙螟ｧ縺ｮUserID繧定ｿ斐☆
+    try:
+        subroutine = "get_max_userID"
+        print(subroutine)
+
+        # DB縺九ｉ譛?螟ｧ繝ｦ繝ｼ繧ｶ繝ｼID繧貞叙蠕?
+        query = "select max(user_id) from nbmt_users"
+#        query = nbmt_users.select().where(nbmt_users.columns.user_id==payload['user_id'])
+        maxUserID = await database.fetch_one(query)
+        print("maxUserID:",maxUserID)
+
+        return maxUserID
+    except Exception as e:
+        raise HTTPException(status_code=401, detail=subroutine + ":" + str(e))
+
 @router.get('/')
 async def get_index(request: Request):
     # 初期画面の表示
@@ -275,6 +318,7 @@ async def post_pagename(request: Request,pagename: str,access_token: str,param: 
     # トークンのチェック
     # user = await check_token(access_token , 'access_token')  20211212 hirayama modified
     email = await check_token(access_token , 'access_token')
+    user = await get_user_info(database, email)
     # print("user:" + user)  20211212 hirayama modified
     print("email:" + email)
     # ユーザの権限チェック
@@ -288,6 +332,13 @@ async def post_pagename(request: Request,pagename: str,access_token: str,param: 
         if is_superuser == True:
         # superuserの場合、管理者用画面を表示
             page_file = pagename + '_admin.html'
+    elif pagename == 'profile':  #20211229 komata modified
+        print('profile')
+    elif pagename == 'hobby':  #20211229 komata modified
+        print('hobby')
+    elif pagename == 'nbcmain':
+        print('nbcmain page')
+        page_file = pagename + '.html'
     elif pagename == 'pointtranlist':
         # ポイントトランザクションの一覧処理
         print('this is pointtranlist')
@@ -350,8 +401,8 @@ async def post_pagename(request: Request,pagename: str,access_token: str,param: 
         return templates.TemplateResponse(page_file,{'request': request})
     else:
         print('Sorry, we are out of ' + pagename + '.')
-  
-    return templates.TemplateResponse(page_file,{'request': request})
+    print("call newpage")
+    return templates.TemplateResponse(page_file,{'request': request,'user': user})
 
     # curl -X GET "http://localhost:8000/pages/test/" -H  "accept: application/json" -H  "Authorization: Bearer {eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzX3Rva2VuIiwiZXhwIjoxNjE1OTAxNzE4LCJ1c2VybmFtZSI6InBpcm9yaW5vIn0.YtqZEfBQ3WaoImnIXw6sMZfNtZpUS3KAYJi5nuvDmE0}}"
 
@@ -600,6 +651,9 @@ async def ConversationListCreate(request: Request,access_token: str,conversation
         conversation_time = datetime.strptime(dicts["scheduled_end_timestamp"], '%Y-%m-%d %H:%M:%S') - datetime.strptime(dicts["start_timestamp"], '%Y-%m-%d %H:%M:%S')
         starttime = now
         scheduled_end_timestamp = now + conversation_time
+        # print("starttime and endtime:")
+        # print(starttime)
+        # print(scheduled_end_timestamp)
         print("time:")
         print(starttime.strftime('%Y-%m-%d %H:%M:%S'))
         print("now:")
@@ -607,7 +661,8 @@ async def ConversationListCreate(request: Request,access_token: str,conversation
         print(datetime.strptime(starttime.strftime('%Y-%m-%d %H:%M:%S'),'%Y-%m-%d %H:%M:%S'))
         values = {
             "conversation_code": format(dicts["user_id"],'05') + now.strftime('%Y%m%d%H%M%S'),
-            "user_id": 1,
+            "user_id": dicts["user_id"], # 2022/2/22 modified
+            "to_user_id": dicts["to_user_id"], # 2022/2/22 modified
         #    "start_timestamp": datetime.strptime(dicts["start_timestamp"], '%Y-%m-%d %H:%M:%S'),
             "start_timestamp": starttime,
         #    "scheduled_end_timestamp": datetime.strptime(dicts["scheduled_end_timestamp"], '%Y-%m-%d %H:%M:%S'),
@@ -617,12 +672,13 @@ async def ConversationListCreate(request: Request,access_token: str,conversation
         #    "regist_timestamp": now,2022/3/27 modified
             "regist_timestamp": datetime.strptime(starttime.strftime('%Y-%m-%d %H:%M:%S'),'%Y-%m-%d %H:%M:%S'),
             "regist_user_id": dicts["regist_user_id"],
+            # "update_timestamp": datetime.strptime(dicts["update_timestamp"], '%Y-%m-%d %H:%M:%S'),
         #    "update_timestamp": now, 2022/3/27 modified
             "update_timestamp": datetime.strptime(starttime.strftime('%Y-%m-%d %H:%M:%S'),'%Y-%m-%d %H:%M:%S'),
             "update_user_id": dicts["update_user_id"]
         }
+        print("execute query")  
         query = nbtt_conversation_lists.insert() # これはDBの方で、受け取ったパラメータとは別です
-        print("query")  
 
         # SQLを組み立てる場合はこんな感じになります
         # query = "INSERT INTO nbtt_conversation_list \
@@ -651,6 +707,7 @@ async def ConversationListCreate(request: Request,access_token: str,conversation
         return_values = {
             "conversation_code": values["conversation_code"],
             "user_id": values["user_id"],
+            "to_user_id": values["to_user_id"], # 2022/2/22 added
             "start_timestamp": values["start_timestamp"].strftime('%Y-%m-%d %H:%M:%S'),
             "scheduled_end_timestamp": values["scheduled_end_timestamp"].strftime('%Y-%m-%d %H:%M:%S'),
             "reservation_talking_category": values["reservation_talking_category"],
@@ -707,25 +764,25 @@ async def ConversationListSelect(request: Request,access_token: str,conversation
         elif len(values["conversation_code"]) == 0 and values["user_id"] != 0 : # conversation_codeに値がなく、user_idが0でない場合、受け取ったuser_idで検索する
             query = nbtt_conversation_lists.select().where(nbtt_conversation_lists.c.user_id == values["user_id"]).where(nbtt_conversation_lists.c.scheduled_end_timestamp > now).where(nbtt_conversation_lists.c.is_deleted == False)
         elif len(values["conversation_code"]) == 0 and values["user_id"] == 0 and values["to_user_id"] != 0 : # conversation_codeに値がなく、user_idが0であり、to_user_idが0でない場合、受け取ったto_useridで検索する
-            # 2022/3/27 added start
-            # query = nbtt_conversation_lists.select().where(nbtt_conversation_lists.c.to_user_id == values["to_user_id"]).where(nbtt_conversation_lists.c.scheduled_end_timestamp > now).where(nbtt_conversation_lists.c.is_deleted == False)
-            query = "SELECT \
-                    c.conversation_code,\
-                    c.user_id,\
-                    c.start_timestamp,\
-                    c.scheduled_end_timestamp,\
-                    c.reservation_talking_category,\
-                    c.is_deleted,\
-                    c.regist_timestamp,\
-                    c.regist_user_id,\
-                    c.update_timestamp,\
-                    c.update_user_id,\
-                    n.username_sei,\
-                    n.username_mei\
-                    FROM nbtt_conversation_list c INNER JOIN nbmt_users n \
-                    WHERE c.to_user_id = n.user_id and c.scheduled_end_timestamp > %s and c.is_deleted == False"\
-                % (now,values["to_user_id"])
-            # 2022/3/27 added end
+                # 2022/3/27 added start
+                # query = nbtt_conversation_lists.select().where(nbtt_conversation_lists.c.to_user_id == values["to_user_id"]).where(nbtt_conversation_lists.c.scheduled_end_timestamp > now).where(nbtt_conversation_lists.c.is_deleted == False)
+                query = "SELECT \
+                        c.conversation_code,\
+                        c.user_id,\
+                        c.start_timestamp,\
+                        c.scheduled_end_timestamp,\
+                        c.reservation_talking_category,\
+                        c.is_deleted,\
+                        c.regist_timestamp,\
+                        c.regist_user_id,\
+                        c.update_timestamp,\
+                        c.update_user_id,\
+                        n.username_sei,\
+                        n.username_mei\
+                        FROM nbtt_conversation_list c INNER JOIN nbmt_users n \
+                        WHERE c.to_user_id = n.user_id and c.scheduled_end_timestamp > %s and c.is_deleted == False"\
+                    % (now,values["to_user_id"])
+                # 2022/3/27 added end
         else:
             print("nbtt_conversation_lists..conversation_code ='' user_id = 0 to_user_id = 0") # converasation_codeが空で、ユーザIDが0の場合
             query = nbtt_conversation_lists.select()
@@ -760,7 +817,8 @@ async def ConversationListUpdate(request: Request,access_token: str,conversation
     values = {
         "conversation_code": dicts["conversation_code"],
         "user_id": dicts["user_id"],
-        "reservation_talking_category": dicts["reservation_talking_category"]
+        "reservation_talking_category": dicts["reservation_talking_category"],
+        "update_timestamp": dicts["update_timestamp"]
     }
 
     transaction = await database.transaction()
