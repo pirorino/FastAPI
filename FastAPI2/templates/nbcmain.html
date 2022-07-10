@@ -81,6 +81,8 @@
       <div class="row row-cols-1 row-cols-md-3 g-4" id="requestModal-all">test</div>
       <!-- リクエスト受付用のモーダル -->
       <div class="row row-cols-1 row-cols-md-3 g-4" id="requestedModal-all">test</div>
+      <!-- 会話用のモーダル -->
+      <div class="row row-cols-1 row-cols-md-3 g-4" id="talkingModal-all">test</div>
     </div>
   </form>
 </body>
@@ -89,6 +91,7 @@
   var proposal_user = 0; // 申し込み元ユーザ
   var onpolling = 1; // 停止状態=0 申し込み受け中ポーリング=1 申し込み中ポーリング（受けない）=2 会話中（申し込まない受けない）=3
   var user_id = {{ user['user_id'] }}; // 共通で使う自分自身のid
+  var jitsi_domain = "" // jitsiサーバのドメイン
 
   function OnLinkClick_profile(){
     var next_url1 = 'http://' + location.host + '/pages/profile';
@@ -485,9 +488,92 @@
       })
   }
 
-  // トーク開始。未実装
-  async function StartTalking(conversation_id,update_timestamp){
-    alert("debug:未実装です");
+  // トーク開始
+  async function StartTalking(conversation_code,update_timestamp){
+    $("#talkingModal-all").empty();
+    var h = '<div class="modal fade" id="requestedModal" data-backdrop="static" tabindex="-1" aria-labelledby="requestedModalLabel" aria-hidden="true">'
+              + '  <div class="modal-dialog">'
+              + '    <div class="modal-content">'
+              + '      <div class="modal-header">'
+              + '        <h5 class="modal-title" id="requestedModalLabel">会話申し込み完了</h5>'
+              + '        <button type="button" class="btn-close" data-dismiss="modal" aria-label="Close"></button>'
+              + '      </div>'
+              + '      <div class="modal-body">'
+              + '      <div id="meet">会話</div>'
+              + '      </div>'
+              + '      <div class="modal-footer">'
+              + '        <button type="button" class="btn btn-secondary" data-dismiss="modal" id="' + conversation_code + '" value="' + update_timestamp + ',cancel" onClick="finishConversation(this.id,this.value)">終了</button>'
+              + '      </div>'
+              + '    </div>'
+              + '  </div>'
+              + '</div>'
+              + '<script src="https://' + jitsi_domain + '/external_api.js"></script>'
+              + '<script>'
+              + 'const domain = "' + jitsi_domain + '"; // Jitsi用に使用しているドメイン名'
+              + 'const options = {'
+              + '  roomName: "JitsiMeetAPIExample",  // チャットルーム名'
+              + '  width: 700,'
+              + '  height: 180,'
+              + '  parentNode: document.querySelector("#meet"), // ビデオチャットを表示する要素のID'
+              + '  configOverwrite: {},'
+              + '  interfaceConfigOverwrite: {}'
+              + '}'
+              + 'const api = new JitsiMeetExternalAPI(domain, options);'
+              + 'const api = new JitsiMeetExternalAPI(domain, options);'
+              + 'api.executeCommand("displayName", "My Nickname"); // ニックネーム（表示名）を指定する'
+              + 'api.executeCommand("subject", "My Video Chat"); // チャットルームの件名を指定する'
+              + 'api.executeCommand("toggleAudio"); // 音声のオン / オフ切り替える'
+              + '</script>'
+
+              $("#talkingModal-all").append(h);
+              $('#talkingModal').modal();
+  }
+
+  async function finishConversation(conversation_code,update_timestamp){
+    token = sessionStorage.getItem("TOKEN");    //セッションに保存
+    var fetch_url = 'http://' + location.host + '/users/ConversationListsUpdate?access_token=';
+    data = {
+        "conversation_code": conversation_code,
+        "user_id": 0,
+        "to_user_id": 0,
+        "start_timestamp": "",
+        "scheduled_end_timestamp": "",
+        "reservation_talking_category": "finished",
+        "is_deleted": false,
+        "regist_timestamp": "",
+        "regist_user_id": "",
+        "update_timestamp": "",
+        "update_user_id": ""
+      }
+      return await fetch(fetch_url + token,
+      {
+          method: 'POST',
+          headers: {
+              'Content-Type': 'application/x-www-form-urlencoded',
+              'accept': 'application/json'
+          },
+          body: JSON.stringify(data)
+      })
+      .then(response => {
+          if( response.status === 200 ){
+            return response.json();
+          } else if (response.status === 401 ){
+            onpolling = 1;
+            return response.json();
+          } else {
+            onpolling = 1;
+            throw new Error(response.json());
+          }
+      })
+      .then(
+        // ここにアンケート画面表示を入れる
+        onpolling=1 // 通常状態に戻る
+      )
+      .catch(err => {
+          console.log(err);
+          onpolling=1;
+          return err;
+      })
   }
 
   // 画面起動後にポーリング処理実行開始
