@@ -87,7 +87,7 @@
 
 <script>
   var proposal_user = 0; // 申し込み元ユーザ
-  var onpolling = 0; // ポーリング可能状態=0 申し込み受け中ポーリング=1 申し込み中ポーリング（受けない）=2
+  var onpolling = 1; // 停止状態=0 申し込み受け中ポーリング=1 申し込み中ポーリング（受けない）=2 会話中（申し込まない受けない）=3
   var user_id = {{ user['user_id'] }}; // 共通で使う自分自身のid
 
   function OnLinkClick_profile(){
@@ -100,7 +100,7 @@
   // 会話するボタン押下後のモーダル表示。話す時間を選択し、申し込みボタンが押せる
   async function ShowRequestModal(to_user_id,to_user_name){
     conversationtime=1
-    onpolling = 2; // 会話申し込みを始めたときからリクエスト受付ポーリングは停止する
+    onpolling = 3; // 会話申し込みを始めたときから申し込むまではポーリングは停止する
     h = '<div class="modal fade" id="requestModal" data-backdrop="static" tabindex="-1" aria-labelledby="requestModalLabel" aria-hidden="true">'
         + '  <div class="modal-dialog">'
         + '    <div class="modal-content">'
@@ -182,16 +182,17 @@
     })
     .then(function(json){
       $("#requestModal-all").empty();
-                proposed_user = json.to_user_name
-                 h = '<div class="modal fade" id="requestModal" data-backdrop="static" tabindex="-1" aria-labelledby="requestModalLabel" aria-hidden="true">'
+                // proposed_user = json.to_user_name
+                proposed_username = to_user_name
+                h = '<div class="modal fade" id="requestModal" data-backdrop="static" tabindex="-1" aria-labelledby="requestModalLabel" aria-hidden="true">'
                       + '  <div class="modal-dialog">'
                       + '    <div class="modal-content">'
                       + '      <div class="modal-header">'
                       + '        <h5 class="modal-title" id="requestModalLabel">会話を申し込んでいます</h5>'
-                      + '        <button type="button" class="btn-close" data-dismiss="modal" aria-label="Close"></button>'
+                      + '        <button type="button" class="btn-close" data-dismiss="modal" disabled aria-label="Close"></button>'
                       + '      </div>'
                       + '      <div class="modal-body">'
-                      + proposed_user + 'さんに申し込みをしています'
+                      + proposed_username + 'さんに申し込みをしています'
                       + '      </div>'
                       + '        <p class="card-text">'
                       + '開始時刻:' + json.start_timestamp
@@ -210,9 +211,8 @@
                       + '</div>'
       $("#requestModal-all").append(h);
       $('#requestModal').modal()
-      onpolling = 2;
-      RequestPolling(json.conversation_code,proposed_user); // 申し込んだ後、先方から承諾がくるか定期的にチェックする。
-
+      onpolling = 2; // 正式申し込みしたので、申し込みpollingを始める
+      RequestPolling(json.conversation_code,proposed_username); // 申し込んだ後、先方から承諾がくるか定期的にチェックする。
     })
     .catch(err => {
         console.log(err);
@@ -221,18 +221,16 @@
   }
 
     // 申し込み後、相手から承諾が来たかポーリングする。10秒ごとにgetConversationLists実行
-    async function RequestPolling(conversation_id,proposed_username){
+  async function RequestPolling(conversation_code,proposed_username){
     const intervalMs = 10000;
     // インターバルだけ待ってgetConversationListsをselectするPromiseを作成するヘルパメソッド
-    const sleep = (milliSeconds) => new Promise(resolve => {
-      setTimeout(() => resolve(getRequestConversationList(conversation_id,proposed_username)), milliSeconds);
+    const poll = (milliSeconds) => new Promise(resolve => {
+      setTimeout(() => resolve(getRequestConversationList(conversation_code,proposed_username)), milliSeconds);
     });
 
     const wait = async () => {
       while (true) {
-        const talkInSleep = await sleep(intervalMs);
-        if(onpolling != 2){return};
-        console.log(talkInSleep);
+        await poll(intervalMs);
       }
     };
 
@@ -240,11 +238,14 @@
   };
 
   // こちらから申し込む場合に、申し込みに対して相手から返事が来るか待っている場合の検索処理（冗長な可能性あり）
-  async function getRequestConversationList(conversation_id,proposed_username){
+  async function getRequestConversationList(conversation_code,proposed_username){
       token = sessionStorage.getItem("TOKEN");    //セッションに保存
       var fetch_url = 'http://' + location.host + '/users/ConversationListsSelect?access_token=';
-      data = {
-        "conversation_code": conversation_id,
+      if (onpolling !== 2 ){ // 本当は呼び出し側に入れたかったが断念、申し込み中状態でなければ終了
+        return;
+      };
+    data = {
+        "conversation_code": conversation_code,
         "user_id": 0,
         "to_user_id": 0,
         "start_timestamp": "",
@@ -269,26 +270,26 @@
           if( response.status === 200 ){
             return response.json();
           } else if (response.status === 401 ){
-            onpolling = 0;
+            onpolling = 1;
             return response.json();
           } else {
-            onpolling = 0;
+            onpolling = 1;
             throw new Error(response.json());
           }
       })
       .then(function(json){
-        if (json.reservation_talking_category ="accepted"){
+        if (json.reservation_talking_category === "accepted"){
           $("#requestModal-all").empty();
-          proposal_user = json.user_id
+          // proposal_user = json.user_id
             h = '<div class="modal fade" id="requestModal" data-backdrop="static" tabindex="-1" aria-labelledby="requestModalLabel" aria-hidden="true">'
                 + '  <div class="modal-dialog">'
                 + '    <div class="modal-content">'
                 + '      <div class="modal-header">'
-                + '        <h5 class="modal-title" id="requestModalLabel">申し込みが受付られました</h5>'
-                + '        <button type="button" class="btn-close" data-dismiss="modal" aria-label="Close"></button>'
+                + '        <h5 class="modal-title" id="requestModalLabel">申し込みが受け付けられました</h5>'
+                + '        <button type="button" class="btn-close" data-dismiss="modal" disabled aria-label="Close"></button>'
                 + '      </div>'
                 + '      <div class="modal-body">'
-                + proposed_user + 'より申し込みが受けつけられました'
+                + proposed_username + 'より申し込みが受け付けられました'
                 + '      </div>'
                 + '        <small class="text-muted">' + json.scheduled_end_timestamp + '</small>'
                 + '      <div class="modal-footer">'
@@ -299,12 +300,12 @@
                 + '</div>'
           $("#requestModal-all").append(h);
           $('#requestModal').modal()
-          onpolling=0;
+          onpolling=3; // トーク開始待ち状態は3
         }
       })
       .catch(err => {
           console.log(err);
-          onpolling=0;
+          onpolling=1;
           return err;
       })
   }
@@ -313,15 +314,14 @@
   async function RequestedPolling(){
       const intervalMs = 10000;
       // インターバルだけ待ってgetConversationListsをselectするPromiseを作成するヘルパメソッド
-      const sleep = (milliSeconds) => new Promise(resolve => {
+      const poll = (milliSeconds) => new Promise(resolve => {
         setTimeout(() => resolve(getRequestedConversationList(user_id)), milliSeconds);
       });
     
       const wait = async () => {
-        while (true) {
-          const talkInSleep = await sleep(intervalMs);
-          console.log(talkInSleep);
-        }
+          while (true) {
+            await poll(intervalMs);
+          }
       };
     
     wait();
@@ -332,14 +332,14 @@
   async function getRequestedConversationList(){
     token = sessionStorage.getItem("TOKEN");    //セッションに保存
     var fetch_url = 'http://' + location.host + '/users/ConversationListsSelect?access_token=';
-    if (onpolling === 2 ){
+    if (onpolling !== 1){ // 本当は呼び出し側に入れたかったが断念
       return;
     };
-    onpolling = 1;
+
     data = {
       "conversation_code": "",
       "user_id": 0, // 誰からくるかを指定することはない。指定なしの時は0
-      "to_user_id": user_id,
+      "to_user_id": user_id, // 自分が宛先かどうかを問い合わせるので、to_user_idが重要
       "start_timestamp": "",
       "scheduled_end_timestamp": "",
       "reservation_talking_category": "",
@@ -449,6 +449,7 @@
           // (1)の場合 これから会話を始める宣言
           if( category === "accept"){
             $("#requestedModal-all").empty();
+            onpolling = 3 // 申し込まないし受けない
             // for(var i = 0; i < json.length; i++){
             for(var i = 0; i < 1; i++){
               // var h = '<div class="col" id="h-100">'
@@ -474,7 +475,7 @@
           // (2)(3)の場合
           } else {
           // 特に何も表示しない
-            onpolling=0;
+            onpolling=1;
             return;
           }
       })
