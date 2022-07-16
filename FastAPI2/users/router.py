@@ -745,7 +745,7 @@ async def ConversationListSelect(request: Request,access_token: str,conversation
     try:
         subroutine = "ConversationListSelect"
         print("function :" + subroutine)
-        user = await check_token(access_token , 'access_token')
+        # user = await check_token(access_token , 'access_token')
 
         dicts = conversation_list.dict()
         values = {
@@ -823,19 +823,25 @@ async def ConversationListUpdate(request: Request,access_token: str,conversation
 
     transaction = await database.transaction()
     try:
-        query1 = "select * from nbtt_conversation_lists where conversation_code = '%s' and update_timestamp = '%s' for update" % (values["conversation_code"],values["update_timestamp"])
-        print("query1:" + query1)
-        resultset = await database.fetch_all(query1)
-        print("ret1:" + str(resultset))
+        subroutine = "ConversationListUpdate"
+        print("function :" + subroutine)
+        # user = await check_token(access_token , 'access_token')
+        # UserId = user.user_id
+        UserId = 1
+        now = datetime.now()
+        print(now.strftime('%Y%m%d%H%M%S'))
 
-        print("query2:start")
-        query2 = "update nbtt_conversation_lists set reservation_talking_category = '%s' ,update_timestamp= '%s' where conversation_code = '%s' and update_timestamp = '%s' returning conversation_code" % (values["reservation_talking_category"],now.strftime('%Y-%m-%d %H:%M:%S'),values["conversation_code"],values["update_timestamp"])
-        print("query2:" + query2)
-        ret = await database.execute(query2)
-        print("returning:" + str(ret))
-        if ret is None:
-            raise ValueError
-        await transaction.commit()
+        dicts = conversation_list.dict()
+        values = {
+            "conversation_code": dicts["conversation_code"],
+            "user_id": dicts["user_id"]
+        }
+
+        # conversation_codeのみでupdate対象を決定
+        query = nbtt_conversation_lists.update().where(nbtt_conversation_lists.c.conversation_code == values["conversation_code"]).values(reservation_talking_category="talking",update_timestamp=now,update_user_id=UserId)
+        print("query:" + str(query))
+        resultset = await database.execute(query)
+        # 本当はupdate件数をcheckしたいのだが、出す方法がない(ストアドが必要)
         return {"result": "update success"} # 正常更新完了
     except ValueError as v: # update失敗（対象なし）
         print("query:rollbacked")
