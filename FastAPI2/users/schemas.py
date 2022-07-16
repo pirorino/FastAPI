@@ -128,7 +128,6 @@ class nbtt_conversation_listsCreate(BaseModel):
     regist_user_id: int
     update_timestamp: str
     update_user_id: int
-
 # ----- 2021/12/05 update
 class nbmt_usersCreate(BaseModel):
     user_id: int
@@ -142,6 +141,7 @@ class nbmt_usersCreate(BaseModel):
     is_superuser: bool
     image_id : int
     IMS_join_year : int
+    birthplace: str
     free_comment: str
     regist_timestamp: str
     regist_user_id: int
@@ -161,6 +161,7 @@ class nbmt_usersUpdate(BaseModel):
     is_superuser: bool
     image_id : int
     IMS_join_year : int
+    birthplace: str
     free_comment: str
     regist_timestamp: str
     regist_user_id: int
@@ -180,8 +181,10 @@ class nbmt_usersSelect(BaseModel):
     is_superuser: bool
     image_id : int
     IMS_join_year : int
+    birthplace: str
     free_comment: str
     regist_timestamp: str
     regist_user_id: int
     update_timestamp: str
     update_user_id: int
+
