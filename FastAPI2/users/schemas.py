@@ -83,3 +83,105 @@ class PointStockSelect(BaseModel):
     point: int
     version: str
     is_deleted: bool
+
+# ----- 2021/11/24 added
+class nbtt_user_statusSelect(BaseModel):
+    user_id: int
+    st_status_id: int
+    conversational_timestamp: str
+    expire_timestamp: str
+    regist_timestamp: str
+    regist_user_id: str
+    update_timestamp: str
+    update_user_id: str
+
+class nbtt_user_statusCreate(BaseModel):
+    user_id: int
+    st_status_id: int
+    conversational_timestamp: str
+    expire_timestamp: str
+    regist_timestamp: str
+    regist_user_id: str
+    update_timestamp: str
+    update_user_id: str
+
+class nbtt_conversation_listsSelect(BaseModel):
+    conversation_code: str
+    user_id: int
+    start_timestamp: str
+    scheduled_end_timestamp: str
+    reservation_talking_category: str
+    is_deleted: bool
+    regist_timestamp: str
+    regist_user_id: str
+    update_timestamp: str
+    update_user_id: str
+
+class nbtt_conversation_listsCreate(BaseModel):
+    conversation_code: str
+    user_id: int
+    start_timestamp: str
+    scheduled_end_timestamp: str
+    reservation_talking_category: str
+    is_deleted: bool
+    regist_timestamp: str
+    regist_user_id: int
+    update_timestamp: str
+    update_user_id: int
+
+# ----- 2021/12/05 update
+class nbmt_usersCreate(BaseModel):
+    user_id: int
+    username_sei: str
+    username_mei: str
+    username_sei_kana: str
+    username_mei_kana: str
+    email: str
+    hashed_password: str
+    refresh_token: str
+    is_superuser: bool
+    image_id : int
+    IMS_join_year : int
+    free_comment: str
+    regist_timestamp: str
+    regist_user_id: int
+    update_timestamp: str
+    update_user_id: int
+
+# update用のrequest model
+class nbmt_usersUpdate(BaseModel):
+    user_id: int
+    username_sei: str
+    username_mei: str
+    username_sei_kana: str
+    username_mei_kana: str
+    email: str
+    hashed_password: str
+    refresh_token: str
+    is_superuser: bool
+    image_id : int
+    IMS_join_year : int
+    free_comment: str
+    regist_timestamp: str
+    regist_user_id: int
+    update_timestamp: str
+    update_user_id: int
+
+# select用のrequest model
+class nbmt_usersSelect(BaseModel):
+    user_id: int
+    username_sei: str
+    username_mei: str
+    username_sei_kana: str
+    username_mei_kana: str
+    email: str
+    hashed_password: str
+    refresh_token: str
+    is_superuser: bool
+    image_id : int
+    IMS_join_year : int
+    free_comment: str
+    regist_timestamp: str
+    regist_user_id: int
+    update_timestamp: str
+    update_user_id: int

@@ -11,6 +11,9 @@
     <div class="col-md-2">
         <a href="javascript:OnLinkClick2();" class="btn btn-primary">送付一覧</a>
     </div>
+    <div class="col-md-2">
+        <a href="javascript:OnLinkClick3();" class="btn btn-primary">メインテスト</a>
+    </div>
 </div>
 
 <hr>
@@ -26,6 +29,11 @@ function OnLinkClick2(){
     var next_url2 = 'http://' + location.host + '/pages/pointtranlist';
     access_token = sessionStorage.getItem("TOKEN");    //セッションに保存
     //post("http://localhost:8000/pages/pointtranlist" + "?access_token=" + access_token,"");
+    post(next_url2 + "?access_token=" + access_token,"");
+}
+function OnLinkClick3(){
+    var next_url2 = 'http://' + location.host + '/pages/nbcmain';
+    access_token = sessionStorage.getItem("TOKEN");    //セッションに保存
     post(next_url2 + "?access_token=" + access_token,"");
 }
 </script>

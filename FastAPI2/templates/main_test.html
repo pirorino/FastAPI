@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<!-- jQuery --> 
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <link rel="stylesheet" href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/themes/ui-lightness/jquery-ui.css"/>
+<!-- jQuery UI -->
+    <script src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+    <meta charset="UTF-8">
+    <title>FastAPI Sample Application</title>
+</head>
+<!-- どこまでつくったか
+マッチング表示は固定
+ひとりを選んで申し込み　モーダル表示、はい、いいえ
+いいえの場合、終わり
+はいの場合、conversation_listsを作り、申し込み画面を表示
+　　キャンセルを押すと、conversation_listsをcancel状態にする
+　　受領待ち状態でポーリングする、所まではできていない。
+
+通常状態からポーリングして申し込みの受領を検索
+検索がヒットしたら、うけますか画面を表示
+受けたら、適当に表示
+受けなかったら、うけない更新→テスト未了
+-->
+<body>
+<div style="display: flex; flex-direction: column; min-height: 80vh">
+    <div class="container">
+<!-- kokokara下はマッチング結果 -->
+      <div class="row row-cols-1 row-cols-md-3 g-4" id="match-result">
+        <div class="col" id="match-001">
+          <div class="card match-001">
+            <img src="..." class="card-img-top" alt="...">
+            <div class="card-body">
+              <h5 class="card-title">Aさん</h5>
+              <p class="card-text">趣味・・・サッカー,バスケ,お酒,海外旅行フェス,ブルーノマーズ,ザウィークエンド
+                <p class="card-text">出身・・・東京都港区
+                <p class="card-text">IMS歴・・・12年
+                <p class="card-text">その他・・・コメントコメントコメント
+                  <button type="button" id="001" value="Aさん" class="btn btn-primary" onClick="ShowRequestModal(this.id,this.value)">
+                    申し込みする
+                  </button>
+                </div>
+            <div class="card-footer">
+              <small class="text-muted">3分前に取得</small>
+            </div>
+          </div>
+        </div>
+        <div class="col" id="match-002">
+          <div class="card match-002">
+            <img src="..." class="card-img-top" alt="...">
+            <div class="card-body">
+              <h5 class="card-title">Bさん</h5>
+                <p class="card-text">趣味・・・バトミントン,落語,スイーツ,ゲーム,鬼滅の刃,呪術廻戦
+                <p class="card-text">出身・・・東京都港区
+                <p class="card-text">IMS歴・・・12年
+                <p class="card-text">その他・・・コメントコメントコメント
+              <button type="button" id="002" value="Bさん" class="btn btn-primary" onClick="ShowRequestModal(this.id,this.value)">
+                申し込みする
+              </button>
+            </div>
+            <div class="card-footer">
+              <small class="text-muted">3分前に取得</small>
+            </div>
+          </div>
+        </div>    
+      </div>
+<!-- マッチング結果kokomade -->
+    </div>
+
+    <!-- リクエスト用のモーダル -->
+    <div class="row row-cols-1 row-cols-md-3 g-4" id="requestModal-all">test</div>
+<!-- リクエスト受付用のモーダル -->
+    <div class="row row-cols-1 row-cols-md-3 g-4" id="requestedModal-all">test</div>
+</div>
+<br>
+<hr>
+<footer>
+  <div text-align="center">
+      <p>FastAPI test</p>
+  </div>
+</footer>
+<script type="text/javascript" src="/static/js/js_auth"></script>
+</body>
+
+<!-- 追加するjs関数 -->
+
+<script>
+  var proposal_user = 0; // 申し込み元ユーザ
+  var onpolling = 0; // ポーリング可能状態=0 通常で申し込みポーリング=1 申し込み中ポーリング=2
+
+  // こちらからマッチした人に会話を申し込む際のモーダル表示
+  async function ShowRequestModal(user_id,user_name){
+    conversationtime=1
+    onpolling = 2; // 会話申し込みを始めたときからリクエスト受付ポーリングは停止
+    h = '<div class="modal fade" id="requestModal" tabindex="-1" aria-labelledby="requestModalLabel" aria-hidden="true">'
+        + '  <div class="modal-dialog">'
+        + '    <div class="modal-content">'
+        + '      <div class="modal-header">'
+        + '        <h5 class="modal-title" id="requestModalLabel">会話を申し込みます</h5>'
+        + '        <button type="button" class="btn-close" data-dismiss="modal" aria-label="Close"></button>'
+        + '      </div>'
+        + '      <div class="modal-body">'
+        + user_name + 'さんへ会話を申し込みます'
+        + '      </div>'
+        + '        <p class="card-text">'
+        + '開始時刻:'
+        + '        </p>'
+        + '        <p class="card-text">'
+        + '状態:'
+        + '        </p>'
+        + '      <div class="modal-footer">'
+        + '        <button type="button" class="btn btn-secondary" data-dismiss="modal">やめる</button>'
+        + '        <button type="button" class="btn btn-outline-primary" data-dismiss="modal" id="' + user_id + '" value="' + conversationtime + '" onClick="ConversationListsCreate(this.id,this.value)">申し込む</button> '
+        + '      </div>'
+        + '    </div>'
+        + '  </div>'
+        + '</div>'
+    $("#requestModal-all").empty();
+    $("#requestModal-all").append(h);
+    $('#requestModal').modal()
+  }
+
+  // こちらからマッチした人に会話を申し込む際の申し込みの会話リスト作成
+  async function ConversationListsCreate(to_user_id,conversationtime){
+    token = sessionStorage.getItem("TOKEN");    //セッションに保存
+    var fetch_url = 'http://' + location.host + '/users/ConversationListsCreate?access_token=';
+    let dateStr = new Date().toJSON();
+    repl1 = dateStr.replace( /-/g ,"");
+    repl2 = repl1.replace( /:/g ,"");
+    repl3 = repl2.replace( /T/g ,"");
+    dateStr = repl3.substring(0,14);
+
+    data = {
+      "conversation_code": "001001001001",
+      "user_id": 1,
+      "to_user_id": Number(to_user_id),
+      "start_timestamp": "2022-03-07 23:43:0",
+      "scheduled_end_timestamp": "2022-03-07 23:43:0",
+      "reservation_talking_category": "propose",
+      "is_deleted": false,
+      "regist_timestamp": "2022-03-07 23:43:0",
+      "regist_user_id": 0,
+      "update_timestamp": "2022-03-07 23:43:0",
+      "update_user_id": 0
+    }
+    return await fetch(fetch_url + token,
+    {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'accept': 'application/json'
+        },
+        body: JSON.stringify(data)
+    })
+    .then(response => {
+        if( response.status === 200 ){
+            return response.json();
+        } else if (response.status === 401 ){
+            return response.json();
+        } else {
+          throw new Error(response.json());
+        }
+    })
+    .then(function(json){
+      $("#requestModal-all").empty();
+                proposal_user = json.user_id
+                 h = '<div class="modal fade" id="requestModal" tabindex="-1" aria-labelledby="requestModalLabel" aria-hidden="true">'
+                      + '  <div class="modal-dialog">'
+                      + '    <div class="modal-content">'
+                      + '      <div class="modal-header">'
+                      + '        <h5 class="modal-title" id="requestModalLabel">会話申し込みをしています</h5>'
+                      + '        <button type="button" class="btn-close" data-dismiss="modal" aria-label="Close"></button>'
+                      + '      </div>'
+                      + '      <div class="modal-body">'
+                      + proposal_user + 'さんに申し込みをしています'
+                      + '      </div>'
+                      + '        <p class="card-text">'
+                      + '開始時刻:' + json.start_timestamp
+                      + '        </p>'
+                      + '        <p class="card-text">'
+                      + '状態:' + json.reservation_talking_category
+                      + '        </p>'
+                      + '        <small class="text-muted">' + json.scheduled_end_timestamp + '</small>'
+                      + '      <div class="modal-footer">'
+                      + '        <button type="button" id="' + json.conversation_code + '" class="btn btn-secondary" data-dismiss="modal" value ="' + json.update_timestamp + ',cancel" onclick="ConversationListsUpdate(this.id ,this.value)">キャンセル</button>'
+                      + '      </div>'
+                      + '    </div>'
+                      + '  </div>'
+                      + '</div>'
+      $("#requestModal-all").append(h);
+      $('#requestModal').modal()
+    })
+    .catch(err => {
+        console.log(err);
+        return err;
+    })
+}
+
+  // 通常状態で他からの会話申し込みを受けているかチェック
+  async function getConversationLists(data){
+    token = sessionStorage.getItem("TOKEN");    //セッションに保存
+    var fetch_url = 'http://' + location.host + '/users/ConversationListsSelect?access_token=';
+    if (onpolling !=0 ){
+      return;
+    };
+    onpolling = 1;
+    data = {
+      "conversation_code": "",
+      "user_id": 0,
+      "to_user_id": 2,
+      "start_timestamp": "",
+      "scheduled_end_timestamp": "",
+      "reservation_talking_category": "",
+      "is_deleted": false,
+      "regist_timestamp": "",
+      "regist_user_id": "",
+      "update_timestamp": "",
+      "update_user_id": ""
+    }
+    return await fetch(fetch_url + token,
+    {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'accept': 'application/json'
+        },
+        body: JSON.stringify(data)
+    })
+    .then(response => {
+        if( response.status === 200 ){
+            return response.json();
+        } else if (response.status === 401 ){
+            return response.json();
+        } else {
+          throw new Error(response.json());
+        }
+    })
+    .then(function(json){
+      $("#requestedModal-all").empty();
+            // for(var i = 0; i < json.length; i++){
+              for(var i = 0; i < 1; i++){
+              // var h = '<div class="col" id="h-100">'
+                proposal_user = json[i].user_id
+                 h = '<div class="modal fade" id="requestedModal" tabindex="-1" aria-labelledby="requestedModalLabel" aria-hidden="true">'
+                      + '  <div class="modal-dialog">'
+                      + '    <div class="modal-content">'
+                      + '      <div class="modal-header">'
+                      + '        <h5 class="modal-title" id="requestedModalLabel">会話申し込みがありました</h5>'
+                      + '        <button type="button" class="btn-close" data-dismiss="modal" aria-label="Close"></button>'
+                      + '      </div>'
+                      + '      <div class="modal-body">'
+                      + proposal_user + 'さんから会話申し込みがありました'
+                      + '      </div>'
+                      + '        <p class="card-text">'
+                      + '開始時刻:' + json[i].start_timestamp
+                      + '        </p>'
+                      + '        <p class="card-text">'
+                      + '状態:' + json[i].reservation_talking_category
+                      + '        </p>'
+                      + '        <small class="text-muted">' + json[i].scheduled_end_timestamp + '</small>'
+                      + '      <div class="modal-footer">'
+                      + '        <button type="button" class="btn btn-outline-primary" id="' + json[i].conversation_code + '" value="' + json[i].update_timestamp + ',accept" onClick="ConversationListsUpdate(this.id,this.value)">受け入れる</button> '
+                      + '        <button type="button" class="btn btn-secondary" data-dismiss="modal" id="' + json[i].conversation_code + '" value="' + json[i].update_timestamp + ',cancel" onClick="ConversationListsUpdate(this.id,this.value)">ごめん</button>'
+                      + '      </div>'
+                      + '    </div>'
+                      + '  </div>'
+                      + '</div>'
+              $("#requestedModal-all").append(h);
+              $('#requestedModal').modal()
+            }
+    })
+    .catch(err => {
+        console.log(err);
+        return err;
+    })
+}
+
+// (1)申し込みを受ける側の際、受け入れを押した後に実行 (2)申し込みを受ける側の際、ごめんを押した後に実行 (3)こちらから申し込んだが、やっぱりキャンセルする場合に実行
+ async function ConversationListsUpdate(conversation_code,value){
+    token = sessionStorage.getItem("TOKEN");    //セッションに保存
+    var splitstring = value.split(',');
+    update_timestamp = splitstring[0]
+    category = splitstring[1]
+    var fetch_url = 'http://' + location.host + '/users/ConversationListsUpdate?access_token=';
+    data = {
+      "conversation_code": conversation_code,
+      "user_id": 0,
+      "to_user_id": 0,
+      "start_timestamp": "",
+      "scheduled_end_timestamp": "",
+      "reservation_talking_category": category,
+      "is_deleted": false,
+      "regist_timestamp": "",
+      "regist_user_id": "",
+      "update_timestamp": update_timestamp,
+      "update_user_id": ""
+  }
+    return await fetch(fetch_url + token,
+    {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'accept': 'application/json'
+        },
+        body: JSON.stringify(data)
+    })
+    .then(response => {
+        if( response.status === 200 ){
+            return response.json();
+        } else if (response.status === 401 ){
+            return response.json();
+        } else {
+          throw new Error(response.json());
+        }
+    })
+    .then(function(json){
+        if( category === "accept"){
+          $("#requestedModal-all").empty();
+            // for(var i = 0; i < json.length; i++){
+            for(var i = 0; i < 1; i++){
+              // var h = '<div class="col" id="h-100">'
+                var h = '<div class="modal fade" id="requestedModal" tabindex="-1" aria-labelledby="requestedModalLabel" aria-hidden="true">'
+                      + '  <div class="modal-dialog">'
+                      + '    <div class="modal-content">'
+                      + '      <div class="modal-header">'
+                      + '        <h5 class="modal-title" id="requestedModalLabel">会話申し込み完了</h5>'
+                      + '        <button type="button" class="btn-close" data-dismiss="modal" aria-label="Close"></button>'
+                      + '      </div>'
+                      + '      <div class="modal-body">'
+                      + proposal_user + 'さんからの会話を受け付けました'
+                      + '      </div>'
+                      + '      <div class="modal-footer">'
+                      + '        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>'
+                      + '      </div>'
+                      + '    </div>'
+                      + '  </div>'
+                      + '</div>'
+              $("#requestedModal-all").append(h);
+              $('#requestedModal').modal();
+            }
+        } else {
+          return;
+        }
+    })
+    .catch(err => {
+        console.log(err);
+        return err;
+    })
+}
+
+// こちらから申し込む場合に、申し込みに対して相手から返事が来るか待っている場合の検索処理（冗長な可能性あり）
+async function getRequestConversationLists(conversation_id,proposed_username){
+    token = sessionStorage.getItem("TOKEN");    //セッションに保存
+    var fetch_url = 'http://' + location.host + '/users/ConversationListsSelect?access_token=';
+    data = {
+      "conversation_code": conversation_id,
+      "user_id": 0,
+      "to_user_id": 0,
+      "start_timestamp": "",
+      "scheduled_end_timestamp": "",
+      "reservation_talking_category": "",
+      "is_deleted": false,
+      "regist_timestamp": "",
+      "regist_user_id": "",
+      "update_timestamp": "",
+      "update_user_id": ""
+    }
+    return await fetch(fetch_url + token,
+    {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'accept': 'application/json'
+        },
+        body: JSON.stringify(data)
+    })
+    .then(response => {
+        if( response.status === 200 ){
+            return response.json();
+        } else if (response.status === 401 ){
+            return response.json();
+        } else {
+          throw new Error(response.json());
+        }
+    })
+    .then(function(json){
+      $("#requestModal-all").empty();
+            if (json.reservation_talking_category ="accepted"){
+                proposal_user = json.user_id
+                 h = '<div class="modal fade" id="requestModal" tabindex="-1" aria-labelledby="requestModalLabel" aria-hidden="true">'
+                      + '  <div class="modal-dialog">'
+                      + '    <div class="modal-content">'
+                      + '      <div class="modal-header">'
+                      + '        <h5 class="modal-title" id="requestModalLabel">申し込みが受付られました</h5>'
+                      + '        <button type="button" class="btn-close" data-dismiss="modal" aria-label="Close"></button>'
+                      + '      </div>'
+                      + '      <div class="modal-body">'
+                      + proposed_user + 'より申し込みが受けつけられました'
+                      + '      </div>'
+                      + '        <small class="text-muted">' + json.scheduled_end_timestamp + '</small>'
+                      + '      <div class="modal-footer">'
+                      + '        <button type="button" class="btn btn-outline-primary" id="' + json.conversation_code + '" value="' + json.update_timestamp + '" onClick="StartTalking(this.id,this.value)">トークを開始する</button> '
+                      + '      </div>'
+                      + '    </div>'
+                      + '  </div>'
+                      + '</div>'
+              $("#requestModal-all").append(h);
+              $('#requestModal').modal()
+              // onpolling=0;
+            }
+    })
+    .catch(err => {
+        console.log(err);
+        onpolling=0;
+        return err;
+    })
+}
+
+// トーク開始。未実装
+async function StartTalking(conversation_id,update_timestamp){
+}
+
+// リクエスト受付をチェックする為のポーリング処理本体、10秒ごとにポーリングしgetConversationLists実行
+ async function RequestedPolling(conversation_id){
+    const intervalMs = 10000;
+    // インターバルだけ待ってgetConversationListsをselectするPromiseを作成するヘルパメソッド
+    const sleep = (milliSeconds) => new Promise(resolve => {
+      setTimeout(() => resolve(getConversationList(conversation_id)), milliSeconds);
+    });
+  
+    const wait = async () => {
+      while (true) {
+        const talkInSleep = await sleep(intervalMs);
+        console.log(talkInSleep);
+      }
+    };
+  
+  wait();
+ };
+
+  // こちからのリクエストの応答を待つポーリング処理本体、10秒ごとにポーリングしgetConversationLists実行
+  async function RequestPolling(conversation_id,proposed_username){
+    const intervalMs = 10000;
+    // インターバルだけ待ってgetConversationListsをselectするPromiseを作成するヘルパメソッド
+    const sleep = (milliSeconds) => new Promise(resolve => {
+      setTimeout(() => resolve(getRequestConversationLists(conversation_id,proposed_username)), milliSeconds);
+    });
+  
+    const wait = async () => {
+      while (true) {
+        const talkInSleep = await sleep(intervalMs);
+        if(onpolling != 2){return};
+        console.log(talkInSleep);
+      }
+    };
+  
+  wait();
+ };
+
+ // 画面起動後にポーリング処理実行開始
+ // window.onload = RequestedPolling();
+ window.onload = getConversationLists();
+
+</script>
+</html>
