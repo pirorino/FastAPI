@@ -78,20 +78,22 @@
         <button type="button" id="015" value="伊勢　花子" class="btn btn-primary" onClick="ShowRequestModal(this.id,this.value)">会話する</button>
       </div>
       <!-- リクエスト用のモーダル -->
-      <div class="row row-cols-1 row-cols-md-3 g-4" id="requestModal-all">test</div>
+      <div class="row row-cols-1 row-cols-md-3 g-4" id="requestModal-all"></div>
       <!-- リクエスト受付用のモーダル -->
-      <div class="row row-cols-1 row-cols-md-3 g-4" id="requestedModal-all">test</div>
+      <div class="row row-cols-1 row-cols-md-3 g-4" id="requestedModal-all"></div>
       <!-- 会話用のモーダル -->
-      <div class="row row-cols-1 row-cols-md-3 g-4" id="talkingModal-all">test</div>
+      <div class="row row-cols-1 row-cols-md-3 g-4" id="talkingModal-all"></div>
     </div>
   </form>
 </body>
 
+<!-- <script src="https://jitsi_domain/external_api.js"> -->
+
 <script>
   var proposal_user = 0; // 申し込み元ユーザ
   var onpolling = 1; // 停止状態=0 申し込み受け中ポーリング=1 申し込み中ポーリング（受けない）=2 会話中（申し込まない受けない）=3
+  var jitsi_domain = ""; // jitsiサーバのドメイン
   var user_id = {{ user['user_id'] }}; // 共通で使う自分自身のid
-  var jitsi_domain = "" // jitsiサーバのドメイン
 
   function OnLinkClick_profile(){
     var next_url1 = 'http://' + location.host + '/pages/profile';
@@ -109,7 +111,7 @@
         + '    <div class="modal-content">'
         + '      <div class="modal-header">'
         + '        <h5 class="modal-title" id="requestModalLabel">会話を申し込みます</h5>'
-        + '        <button type="button" class="btn-close" data-dismiss="modal" aria-label="Close"></button>'
+        // + '        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>'
         + '      </div>'
         + '      <div class="modal-body">'
         + to_user_name + 'さんへ会話を申し込みます'
@@ -123,15 +125,16 @@
         + '        </select>'
         + '      </div>'
         + '      <div class="modal-footer">'
-        + '        <button type="button" class="btn btn-secondary" data-dismiss="modal">やめる</button>'
-        + '        <button type="button" class="btn btn-outline-primary" data-dismiss="modal" id="' + to_user_id + '" value="' + to_user_name +'" onClick="proposeConversation(this.id,this.value)">申し込む</button> '
+        + '        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">やめる</button>'
+        + '        <button type="button" class="btn btn-outline-primary" data-bs-dismiss="modal" id="' + to_user_id + '" value="' + to_user_name +'" onClick="proposeConversation(this.id,this.value)">申し込む</button> '
         + '      </div>'
         + '    </div>'
         + '  </div>'
         + '</div>'
     $("#requestModal-all").empty();
     $("#requestModal-all").append(h);
-    $('#requestModal').modal()
+    var myModal = new bootstrap.Modal(document.getElementById('requestModal'), backdrop=true);
+    myModal.show();
   }
 
   // 申し込みボタンを押した後の処理。サーバ側で会話リストデータを作成する
@@ -139,7 +142,7 @@
   {
     // 申し込む　を連打すると、１つめモーダルが閉じきる前に次が開いてしまうバグ対応スリープ
     const _sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
-    await _sleep(1000);
+    await _sleep(500);
 
     var val = document.getElementById("talkingtime").value;
     ConversationListsCreate(to_user_id,to_user_name,val);
@@ -192,7 +195,7 @@
                       + '    <div class="modal-content">'
                       + '      <div class="modal-header">'
                       + '        <h5 class="modal-title" id="requestModalLabel">会話を申し込んでいます</h5>'
-                      + '        <button type="button" class="btn-close" data-dismiss="modal" disabled aria-label="Close"></button>'
+                      + '        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>'
                       + '      </div>'
                       + '      <div class="modal-body">'
                       + proposed_username + 'さんに申し込みをしています'
@@ -207,13 +210,17 @@
                       + '終了時刻:' + json.scheduled_end_timestamp
                       + '        </p>'
                       + '      <div class="modal-footer">'
-                      + '        <button type="button" id="' + json.conversation_code + '" class="btn btn-secondary" data-dismiss="modal" value ="' + json.update_timestamp + ',cancel" onclick="ConversationListsUpdate(this.id ,this.value)">キャンセル</button>'
+                      + '        <button type="button" id="' + json.conversation_code + '" class="btn btn-secondary" data-bs-dismiss="modal" value ="' + json.update_timestamp + ',cancel" onclick="ConversationListsUpdate(this.id ,this.value)">キャンセル</button>'
+                      // + '  test      <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" >キャンセル</button>'
                       + '      </div>'
                       + '    </div>'
                       + '  </div>'
                       + '</div>'
+      $("#requestModal-all").empty();
       $("#requestModal-all").append(h);
-      $('#requestModal').modal()
+      var myModal = new bootstrap.Modal(document.getElementById('requestModal'), backdrop=true);
+      myModal.show();
+      // $('#requestModal').modal()
       onpolling = 2; // 正式申し込みしたので、申し込みpollingを始める
       RequestPolling(json.conversation_code,proposed_username); // 申し込んだ後、先方から承諾がくるか定期的にチェックする。
     })
@@ -289,7 +296,7 @@
                 + '    <div class="modal-content">'
                 + '      <div class="modal-header">'
                 + '        <h5 class="modal-title" id="requestModalLabel">申し込みが受け付けられました</h5>'
-                + '        <button type="button" class="btn-close" data-dismiss="modal" disabled aria-label="Close"></button>'
+                + '        <button type="button" class="btn-close" data-bs-dismiss="modal" disabled aria-label="Close"></button>'
                 + '      </div>'
                 + '      <div class="modal-body">'
                 + proposed_username + 'より申し込みが受け付けられました'
@@ -302,7 +309,9 @@
                 + '  </div>'
                 + '</div>'
           $("#requestModal-all").append(h);
-          $('#requestModal').modal()
+          var myModal = new bootstrap.Modal(document.getElementById('requestModal'), backdrop=true);
+          myModal.show();
+          // $('#requestModal').modal()
           onpolling=3; // トーク開始待ち状態は3
         }
       })
@@ -381,7 +390,7 @@
             + '    <div class="modal-content">'
             + '      <div class="modal-header">'
             + '        <h5 class="modal-title" id="requestedModalLabel">会話申し込みがありました</h5>'
-            + '        <button type="button" class="btn-close" data-dismiss="modal" aria-label="Close"></button>'
+            + '        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>'
             + '      </div>'
             + '      <div class="modal-body">'
             + proposal_user + 'さんから会話申し込みがありました'
@@ -395,13 +404,15 @@
             + '        <small class="text-muted">' + json[i].scheduled_end_timestamp + '</small>'
             + '      <div class="modal-footer">'
             + '        <button type="button" class="btn btn-outline-primary" id="' + json[i].conversation_code + '" value="' + json[i].update_timestamp + ',accept" onClick="ConversationListsUpdate(this.id,this.value)">受け入れる</button> '
-            + '        <button type="button" class="btn btn-secondary" data-dismiss="modal" id="' + json[i].conversation_code + '" value="' + json[i].update_timestamp + ',cancel" onClick="ConversationListsUpdate(this.id,this.value)">ごめん</button>'
+            + '        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" id="' + json[i].conversation_code + '" value="' + json[i].update_timestamp + ',cancel" onClick="ConversationListsUpdate(this.id,this.value)">ごめん</button>'
             + '      </div>'
             + '    </div>'
             + '  </div>'
             + '</div>'
         $("#requestedModal-all").append(h);
-        $('#requestedModal').modal()
+        // $('#requestedModal').modal()
+        var myModal = new bootstrap.Modal(document.getElementById('requestedModal'), backdrop=true);
+        myModal.show();
       }
     })
     .catch(err => {
@@ -461,19 +472,21 @@
                       + '    <div class="modal-content">'
                       + '      <div class="modal-header">'
                       + '        <h5 class="modal-title" id="requestedModalLabel">会話申し込み完了</h5>'
-                      + '        <button type="button" class="btn-close" data-dismiss="modal" aria-label="Close"></button>'
+                      + '        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>'
                       + '      </div>'
                       + '      <div class="modal-body">'
                       + proposal_user + 'さんからの会話を受け付けました'
                       + '      </div>'
                       + '      <div class="modal-footer">'
-                      + '        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>'
+                      + '        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>'
                       + '      </div>'
                       + '    </div>'
                       + '  </div>'
                       + '</div>'
               $("#requestedModal-all").append(h);
-              $('#requestedModal').modal();
+              // $('#requestedModal').modal();
+              var myModal = new bootstrap.Modal(document.getElementById('requestedModal'), backdrop=true);
+              myModal.show();
             }
           // (2)(3)の場合
           } else {
@@ -492,41 +505,25 @@
   async function StartTalking(conversation_code,update_timestamp){
     $("#talkingModal-all").empty();
     var h = '<div class="modal fade" id="requestedModal" data-backdrop="static" tabindex="-1" aria-labelledby="requestedModalLabel" aria-hidden="true">'
-              + '  <div class="modal-dialog">'
-              + '    <div class="modal-content">'
-              + '      <div class="modal-header">'
-              + '        <h5 class="modal-title" id="requestedModalLabel">会話申し込み完了</h5>'
-              + '        <button type="button" class="btn-close" data-dismiss="modal" aria-label="Close"></button>'
-              + '      </div>'
-              + '      <div class="modal-body">'
-              + '      <div id="meet">会話</div>'
-              + '      </div>'
-              + '      <div class="modal-footer">'
-              + '        <button type="button" class="btn btn-secondary" data-dismiss="modal" id="' + conversation_code + '" value="' + update_timestamp + ',cancel" onClick="finishConversation(this.id,this.value)">終了</button>'
-              + '      </div>'
-              + '    </div>'
-              + '  </div>'
-              + '</div>'
-              + '<script src="https://' + jitsi_domain + '/external_api.js"></script>'
-              + '<script>'
-              + 'const domain = "' + jitsi_domain + '"; // Jitsi用に使用しているドメイン名'
-              + 'const options = {'
-              + '  roomName: "JitsiMeetAPIExample",  // チャットルーム名'
-              + '  width: 700,'
-              + '  height: 180,'
-              + '  parentNode: document.querySelector("#meet"), // ビデオチャットを表示する要素のID'
-              + '  configOverwrite: {},'
-              + '  interfaceConfigOverwrite: {}'
-              + '}'
-              + 'const api = new JitsiMeetExternalAPI(domain, options);'
-              + 'const api = new JitsiMeetExternalAPI(domain, options);'
-              + 'api.executeCommand("displayName", "My Nickname"); // ニックネーム（表示名）を指定する'
-              + 'api.executeCommand("subject", "My Video Chat"); // チャットルームの件名を指定する'
-              + 'api.executeCommand("toggleAudio"); // 音声のオン / オフ切り替える'
-              + '</script>'
-
+          + '  <div class="modal-dialog">'
+          + '    <div class="modal-content">'
+          + '      <div class="modal-header">'
+          + '        <h5 class="modal-title" id="requestedModalLabel">会話申し込み完了</h5>'
+          + '        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>'
+          + '      </div>'
+          + '      <div class="modal-body">'
+          + '      <div id="meet">会話</div>'
+          + '      </div>'
+          + '      <div class="modal-footer">'
+          + '        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" id="' + conversation_code + '" value="' + update_timestamp + ',cancel" onClick="finishConversation(this.id,this.value)">終了</button>'
+          + '      </div>'
+          + '    </div>'
+          + '  </div>'
+          + '</div>'
               $("#talkingModal-all").append(h);
-              $('#talkingModal').modal();
+              // $('#talkingModal').modal();
+              var myModal = new bootstrap.Modal(document.getElementById('talkingModal'), backdrop=true);
+              myModal.show();
   }
 
   async function finishConversation(conversation_code,update_timestamp){
@@ -590,6 +587,22 @@
       });
   });
 
+
+  async function call_jisti(jiti_domain){
+    const domain = "jitsi_domain"; // Jitsi用に使用しているドメイン名'
+    const options = {
+        roomName: "JitsiMeetAPIExample",  // チャットルーム名'
+        width: 700,
+        height: 180,
+        parentNode: document.querySelector("#meet"), // ビデオチャットを表示する要素のID'
+        configOverwrite: {},
+        interfaceConfigOverwrite: {}
+      }
+      const api = new JitsiMeetExternalAPI(domain, options);
+      api.executeCommand("displayName", "My Nickname"); // ニックネーム（表示名）を指定する
+      api.executeCommand("subject", "My Video Chat"); // チャットルームの件名を指定する
+      api.executeCommand("toggleAudio"); // 音声のオン / オフ切り替える
+  }  
 </script>
 
 {% endblock %}
