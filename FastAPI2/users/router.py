@@ -1,5 +1,9 @@
+from asyncio.windows_events import NULL
 import os
 import hashlib
+import pdb
+import json
+import ast
 from fastapi import APIRouter, Depends, HTTPException, UploadFile,File,Form
 from typing import List
 from starlette.requests import Request
@@ -30,7 +34,7 @@ from .schemas import CompleteList
 
 # 2021/12/12 Hirayama added start
 from .schemas import nbtt_user_statusSelect,nbtt_user_statusCreate,nbtt_conversation_listsSelect,nbtt_conversation_listsCreate
-from .schemas import nbmt_usersSelect,nbmt_usersCreate
+from .schemas import nbmt_usersSelect,nbmt_usersCreate,nbmt_usersUpdate
 # 2021/12/12 Hirayama added end
 
 import shutil
@@ -43,14 +47,23 @@ router = APIRouter()
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
 # 入力したパスワード（平文）をハッシュ化して返します。
-def get_users_insert_dict(user):
+# def get_users_insert_dict(user):
+#    subroutine = "get_users_insert_dict"
+#    print("function :" + subroutine)
+#    pwhash=hashlib.sha256(user.password.encode('utf-8')).hexdigest()
+#    values=user.dict()
+#    values.pop("password")
+#    values["hashed_password"]=pwhash
+#    return values
+
+def get_users_insert_dict(password:str):
     subroutine = "get_users_insert_dict"
     print("function :" + subroutine)
-    pwhash=hashlib.sha256(user.password.encode('utf-8')).hexdigest()
-    values=user.dict()
-    values.pop("password")
-    values["hashed_password"]=pwhash
-    return values
+    pwhash=hashlib.sha256(password.encode('utf-8')).hexdigest()
+    # values=user.dict()
+    # values.pop("password")
+    # values["hashed_password"]=pwhash
+    return pwhash
 
 # def test_dict(user):
 #     values=user.dict()
@@ -87,7 +100,7 @@ async def create_tokens(database: Database,email: str):
         # query = users.update().where(users.columns.username==username).values(refresh_token=refresh_token)  20211212 hirayama modified   
         query = nbmt_users.update().where(nbmt_users.columns.email==email).values(refresh_token=refresh_token)
         ret = await database.execute(query)
-        # 繝ｦ繝ｼ繧ｶID繧りｿ斐☆繧医≧縺ｫ螟画峩
+        # ユーザIDも返すように変更
         user = await get_user_info(database, email)
         UserId = user[0]
         print("UserId:" + str(UserId))
@@ -167,6 +180,7 @@ async def authenticate(database: Database,email: str, password: str):
         # print("hashed_password:",ret[3])
         # user = db.query(User).filter(User.email == email).first()
     except Exception as e:
+        print("authenticate db error" + str(e))
         raise HTTPException(status_code=401, detail=subroutine + ":" + str(e))
     if ret == None:
         print("no user")
@@ -176,6 +190,7 @@ async def authenticate(database: Database,email: str, password: str):
     if ret[6] != hashed_password:
         print("password unmatch")
         raise HTTPException(status_code=401, detail='password unmatch')
+    print("return from authenticate")
     return ret
 
 # usersを全件検索して「UserSelect」のリストをjsonにして返します。
@@ -205,12 +220,12 @@ async def check_privilege(database: Database,email: str):
         raise HTTPException(status_code=401, detail=subroutine + ":" + str(e))
 
 async def get_user_info(database: Database,email: str): #20211229 komata modified
-    # """email縺九ｉuser諠??ｱ繧貞叙蠕?"""
+    # """emailからuser情報を取得"""
     try:
         subroutine = "get_user_info"
         print("function :" + subroutine)
 
-        # DB縺九ｉ繝ｦ繝ｼ繧ｶ繝ｼ繧貞叙蠕?
+        # DBからユーザーを取得
         query = nbmt_users.select().where(nbmt_users.columns.email==email)
         query.compile(compile_kwargs={"literal_binds": True})
         ret = await database.fetch_one(query)
@@ -227,12 +242,12 @@ async def set_user_info(database: Database,email: str): #20220121 komata modifie
         raise HTTPException(status_code=401, detail=subroutine + ":" + str(e))
 
 async def get_max_userID(database: Database):
-    # 繝ｦ繝ｼ繧ｶ繝??繝悶Ν縺九ｉ縲∵怙螟ｧ縺ｮUserID繧定ｿ斐☆
+    # ユーザテーブルから、最大のUserIDを返す
     try:
         subroutine = "get_max_userID"
         print(subroutine)
 
-        # DB縺九ｉ譛?螟ｧ繝ｦ繝ｼ繧ｶ繝ｼID繧貞叙蠕?
+        # DBから最大ユーザーIDを取得
         query = "select max(user_id) from nbmt_users"
 #        query = nbmt_users.select().where(nbmt_users.columns.user_id==payload['user_id'])
         maxUserID = await database.fetch_one(query)
@@ -318,9 +333,10 @@ async def post_pagename(request: Request,pagename: str,access_token: str,param: 
     # トークンのチェック
     # user = await check_token(access_token , 'access_token')  20211212 hirayama modified
     email = await check_token(access_token , 'access_token')
-    user = await get_user_info(database, email)
     # print("user:" + user)  20211212 hirayama modified
     print("email:" + email)
+    user = await get_user_info(database, email) #20211229 komata modified
+    print("user:" + str(user[0]))
     # ユーザの権限チェック
     # is_superuser = await check_privilege(database,user)  20211212 hirayama modified
     is_superuser = await check_privilege(database,email)
@@ -338,7 +354,7 @@ async def post_pagename(request: Request,pagename: str,access_token: str,param: 
         print('hobby')
     elif pagename == 'nbcmain':
         print('nbcmain page')
-        page_file = pagename + '.html'
+        # page_file = pagename + '.html'
     elif pagename == 'pointtranlist':
         # ポイントトランザクションの一覧処理
         print('this is pointtranlist')
@@ -402,7 +418,7 @@ async def post_pagename(request: Request,pagename: str,access_token: str,param: 
     else:
         print('Sorry, we are out of ' + pagename + '.')
     print("call newpage")
-    return templates.TemplateResponse(page_file,{'request': request,'user': user})
+    return templates.TemplateResponse(page_file,{'request': request,'user': user})  #20211229 komata modified
 
     # curl -X GET "http://localhost:8000/pages/test/" -H  "accept: application/json" -H  "Authorization: Bearer {eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzX3Rva2VuIiwiZXhwIjoxNjE1OTAxNzE4LCJ1c2VybmFtZSI6InBpcm9yaW5vIn0.YtqZEfBQ3WaoImnIXw6sMZfNtZpUS3KAYJi5nuvDmE0}}"
 
@@ -569,7 +585,7 @@ async def get_token(form: OAuth2PasswordRequestForm = Depends(),db: Database = D
     # トークンを発行します
     try:
         subroutine = "get_token"
-        print("function :" + subroutine)
+        print("function :" + subroutine + ":" + form.username + ":" + form.password)
         user = await authenticate(db, form.username, form.password)
         # print("user:",user[1])
         # token = await create_tokens(db, user[1]) 20211212 hirayama modified
@@ -577,6 +593,7 @@ async def get_token(form: OAuth2PasswordRequestForm = Depends(),db: Database = D
         print("generated token:",token)
         return token
     except Exception as e:
+        print("get_token_error")
         raise HTTPException(status_code=401, detail=subroutine + ":" + str(e))
 # curl -X POST "http://localhost:8000/token" -H  "accept: application/json" -H  "Content-Type: application/x-www-form-urlencoded" -d "username=pirorino&password=password"
 
@@ -630,7 +647,6 @@ async def read_users_super_del(delete_user: UserUpdate,token: str = Depends(oaut
     return {"result": "delete success"}
 
 # ----------------- 2021/11/24 added
-
 @router.post("/users/ConversationListsCreate", response_model=nbtt_conversation_listsSelect)
 async def ConversationListCreate(request: Request,access_token: str,conversation_list: nbtt_conversation_listsCreate, database: Database = Depends(get_connection)):
 #async def ConversationListCreate(request: Request,conversation_list: nbtt_conversation_listsCreate, database: Database = Depends(get_connection)):
@@ -745,7 +761,7 @@ async def ConversationListSelect(request: Request,access_token: str,conversation
     try:
         subroutine = "ConversationListSelect"
         print("function :" + subroutine)
-        # user = await check_token(access_token , 'access_token')
+        #user = await check_token(access_token , 'access_token')
 
         dicts = conversation_list.dict()
         values = {
@@ -867,6 +883,7 @@ async def UsersCreate(users: nbmt_usersCreate, database: Database = Depends(get_
         # user_id は自動インクリメントが必要。
 
         dicts = users.dict()
+        dicts["hashed_password"]=get_users_insert_dict(dicts["hashed_password"])
         values = {
             "user_id": dicts["user_id"],
             "username_sei": dicts["username_sei"],
@@ -879,6 +896,7 @@ async def UsersCreate(users: nbmt_usersCreate, database: Database = Depends(get_
             "is_superuser": dicts["is_superuser"],
             "image_id": dicts["image_id"],
             "IMS_join_year": dicts["IMS_join_year"],
+            "birthplace": dicts["birthplace"],
             "free_comment": dicts["free_comment"],
             "regist_timestamp": now,
             "regist_user_id": dicts["regist_user_id"],
@@ -904,12 +922,50 @@ async def UsersCreate(users: nbmt_usersCreate, database: Database = Depends(get_
             "is_superuser": values["is_superuser"],
             "image_id": values["image_id"],
             "IMS_join_year": values["IMS_join_year"],
+            "birthplace": values["birthplace"],
             "free_comment": values["free_comment"],
-            "regist_timestamp": values["update_timestamp"].strftime('%Y-%m-%d %H:%M:%S'),
-            "regist_user_id": values["regist_user_id"],
-            "update_timestamp": values["update_timestamp"].strftime('%Y-%m-%d %H:%M:%S'),
-            "update_user_id": values["update_user_id"]
+            "regist_timestamp": now.strftime('%Y%m%d%H%M%S'),
+            "regist_user_id": values["user_id"],
+            "update_timestamp": "",
+            "update_user_id": NULL
         }
         return {**return_values}
+    except Exception as e:
+        raise HTTPException(status_code=401, detail=subroutine + ":" + str(e))
+
+# ----------------- 2022/01/29 komata added
+@router.post("/users/UsersUpdate", response_model=nbmt_usersSelect)
+async def UsersUpdate(request: Request, access_token: str, param: str, database: Database = Depends(get_connection)):
+    # nbmt_usersを更新します。
+    try:
+        subroutine = "UsersUpdate"
+        print("function :" + subroutine)
+        
+        print("param:" + param)
+        dic = ast.literal_eval(param)
+
+        email = await check_token(access_token , 'access_token')
+        print("email:" + email)
+
+        user = await get_user_info(database, email)
+
+        query = nbmt_users.update().where(nbmt_users.columns.email==email).values( \
+           username_sei=dic['username_sei'], \
+           username_mei=dic['username_mei'], \
+           username_sei_kana=dic['username_sei_kana'], \
+           username_mei_kana=dic['username_mei_kana'], \
+           email=dic['email'], \
+           hashed_password=get_users_insert_dict(dic["password"]), \
+           IMS_join_year=int(dic['IMS_join_year']), \
+           birthplace=dic['birthplace'], \
+           free_comment=dic['free_comment'],
+           update_timestamp=datetime.now(),
+           update_user_id=user["update_user_id"]
+           )
+        ret = await database.execute(query)
+        user = await get_user_info(database, email)
+
+        return templates.TemplateResponse("profile.html",{'request': request,'user': user})
+
     except Exception as e:
         raise HTTPException(status_code=401, detail=subroutine + ":" + str(e))
