@@ -169,7 +169,7 @@ async function Refresh_token(url,refresh_token){
             alert("セッションが無効です。");
             sessionStorage.setItem("TOKEN","");    //セッションを空に
             sessionStorage.setItem("REFRESH_TOKEN","");    //セッションを空に
-            sessionStorage.setItem("USERNAME","");    //セッションを空に
+            sessionStorage.setItem("USERID","");    //セッションを空に
             throw new Error("リフレッシュトークンが違っています");
         }
     })
@@ -187,8 +187,7 @@ async function Refresh_token(url,refresh_token){
 }
 
 function LoginClick(){
-    // formを送るとリロードしちゃってtokenをキャンセルするので、ボタンクリックに変更した
-    var loginForm = document.forms.loginForm;
+    // formを送るとリロードしちゃってtokenをキャンセルするので、ボタンクリックに変更した    var loginForm = document.forms.loginForm;
     var UserName = loginForm.elements.UserName.value;
     var Password = loginForm.elements.Password.value;
     var msg = "username=" + UserName + "&password=" + Password;
@@ -346,7 +345,13 @@ function SendPointtranFormOpen(){
     SendPointtranForm.elements.comment.disabled = false;
 }
 
-/* 未使用
+function OnLinkClick_topPage(){
+    var next_url = 'http://' + location.host + '/pages/toppage';
+    access_token = sessionStorage.getItem("TOKEN");    //セッションに保存
+    post(next_url + "?access_token=" + access_token,"");
+}
+
+/* 譛ｪ菴ｿ逕ｨ
 function formLogin(){
     var loginForm = document.forms.loginForm;
     var UserName = loginForm.elements.UserName.value;
@@ -370,14 +375,14 @@ function formLogin(){
         if( response.status === 200 ){
             return response.json();
         }else if( response.status === 401 ){
-            alert("ユーザかパスワードが間違っています");
-            sessionStorage.setItem("TOKEN","");    //セッションを空に
-            throw new Error("ユーザかパスワードが間違っています");
+            alert("繝ｦ繝ｼ繧ｶ縺九ヱ繧ｹ繝ｯ繝ｼ繝峨′髢馴＆縺｣縺ｦ縺・∪縺・);
+            sessionStorage.setItem("TOKEN","");    //繧ｻ繝・す繝ｧ繝ｳ繧堤ｩｺ縺ｫ
+            throw new Error("繝ｦ繝ｼ繧ｶ縺九ヱ繧ｹ繝ｯ繝ｼ繝峨′髢馴＆縺｣縺ｦ縺・∪縺・);
         }
     })
     .then(json => {
             retstr = JSON.parse(JSON.stringify(json));
-            sessionStorage.setItem("TOKEN",retstr.access_token);    //セッションに保存
+            sessionStorage.setItem("TOKEN",retstr.access_token);    //繧ｻ繝・す繝ｧ繝ｳ縺ｫ菫晏ｭ・
             // alert("2nd:" + retstr.access_token);
         })
     .catch(err => console.log("formlogin fetch error:" + err))
@@ -398,7 +403,7 @@ function formLogin(){
         if(xmlHttp.status === 200){
             alert(this.status + " succeeded")
             res = JSON.parse(xmlHttp.responseText);            
-            sessionStorage.setItem("TOKEN",res.access_token);    //セッションに保存
+            sessionStorage.setItem("TOKEN",res.access_token);    //繧ｻ繝・す繝ｧ繝ｳ縺ｫ菫晏ｭ・
         }else{
             alert(this.status + " error occured")
         }
@@ -407,10 +412,11 @@ function formLogin(){
 
 function checkSessionStorage(){
     // var token = sessionStorage.getItem("TOKEN");
-    var userid = sessionStorage.getItem("USERID");
+    // var username = sessionStorage.getItem("USERNAME");
     var token = sessionStorage.getItem("REFRESH_TOKEN");
+    var UserId = sessionStorage.getItem("USERID");
     
-        alert('sessionStorage refresh_token:' + token + ' userid:' + userid);
+        alert('sessionStorage refresh_token:' + token + 'UserID:' + UserId);
 }
 
 //Json形式のデータを送る
@@ -470,7 +476,7 @@ function getJson(url,token,proc) {
     xmlHttp.send();
 }
 
-//Token取得処理
+//Token蜿門ｾ怜・逅・
 function checkToken(){
     //セッションに保存済みか確認
     UserName = "pirorino"
