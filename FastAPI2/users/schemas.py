@@ -1,6 +1,8 @@
 from pydantic import BaseModel
 import datetime
 
+from sqlalchemy.sql.sqltypes import Integer, SmallInteger
+
 # insert用のrequest model。id(自動採番)は入力不要のため定義しない。
 class UserCreate(BaseModel):
     username: str
@@ -108,6 +110,7 @@ class nbtt_user_statusCreate(BaseModel):
 class nbtt_conversation_listsSelect(BaseModel):
     conversation_code: str
     user_id: int
+    to_user_id: int # 2022/2/22 added
     start_timestamp: str
     scheduled_end_timestamp: str
     reservation_talking_category: str
@@ -120,6 +123,7 @@ class nbtt_conversation_listsSelect(BaseModel):
 class nbtt_conversation_listsCreate(BaseModel):
     conversation_code: str
     user_id: int
+    to_user_id: int # 2022/2/22 added
     start_timestamp: str
     scheduled_end_timestamp: str
     reservation_talking_category: str
@@ -142,6 +146,7 @@ class nbmt_usersCreate(BaseModel):
     is_superuser: bool
     image_id : int
     IMS_join_year : int
+    birthplace: str
     free_comment: str
     regist_timestamp: str
     regist_user_id: int
@@ -161,6 +166,7 @@ class nbmt_usersUpdate(BaseModel):
     is_superuser: bool
     image_id : int
     IMS_join_year : int
+    birthplace: str
     free_comment: str
     regist_timestamp: str
     regist_user_id: int
@@ -180,6 +186,7 @@ class nbmt_usersSelect(BaseModel):
     is_superuser: bool
     image_id : int
     IMS_join_year : int
+    birthplace: str
     free_comment: str
     regist_timestamp: str
     regist_user_id: int
