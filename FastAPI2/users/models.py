@@ -39,7 +39,6 @@ userpicture = sqlalchemy.Table(
     "userpicture",
     metadata,
     sqlalchemy.Column("username", sqlalchemy.String, primary_key=True,index=True,default=False),
-    # sqlalchemy.Column("username", sqlalchemy.String),
     sqlalchemy.Column("filename", sqlalchemy.String, primary_key=True,index=True,default=False),
     sqlalchemy.Column("update_datetime", sqlalchemy.DateTime),
     sqlalchemy.Column("path", sqlalchemy.String),
@@ -62,6 +61,7 @@ nbtt_conversation_lists = sqlalchemy.Table(
     metadata,
     sqlalchemy.Column("conversation_code", sqlalchemy.String, primary_key=True, index=True), #会話ID
     sqlalchemy.Column("user_id", sqlalchemy.Integer, primary_key=True, index=True), #ユーザID
+    sqlalchemy.Column("to_user_id", sqlalchemy.Integer, index=True), #宛先ユーザID  2022/2/22 added
     sqlalchemy.Column("start_timestamp", sqlalchemy.TIMESTAMP), #開始時刻
     sqlalchemy.Column("scheduled_end_timestamp", sqlalchemy.TIMESTAMP), #終了予定時刻
     sqlalchemy.Column("reservation_talking_category", sqlalchemy.String), #予約/会話中カテゴリ
@@ -84,6 +84,7 @@ nbmt_users = sqlalchemy.Table(
     sqlalchemy.Column("refresh_token", sqlalchemy.String(512)),
     sqlalchemy.Column("is_superuser", sqlalchemy.Boolean(), default=False),
     sqlalchemy.Column("image_id", sqlalchemy.Integer),
+    sqlalchemy.Column("birthplace", sqlalchemy.String(256)),
     sqlalchemy.Column("IMS_join_year", sqlalchemy.SmallInteger),
     sqlalchemy.Column("free_comment", sqlalchemy.String(15)),
     sqlalchemy.Column("regist_timestamp", sqlalchemy.DateTime),
