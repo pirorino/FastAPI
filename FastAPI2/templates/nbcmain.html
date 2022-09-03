@@ -384,7 +384,7 @@
       // for(var i = 0; i < json.length; i++){
       if(json.length > 0){
         // var h = '<div class="col" id="h-100">'
-        proposal_user = json[i].user_id
+        proposal_user = json[0].user_id
         h = '<div class="modal fade" id="requestedModal" data-backdrop="static" tabindex="-1" aria-labelledby="requestedModalLabel" aria-hidden="true">'
             + '  <div class="modal-dialog">'
             + '    <div class="modal-content">'
@@ -396,15 +396,15 @@
             + proposal_user + 'さんから会話申し込みがありました'
             + '      </div>'
             + '        <p class="card-text">'
-            + '開始時刻:' + json[i].start_timestamp
+            + '開始時刻:' + json[0].start_timestamp
             + '        </p>'
             + '        <p class="card-text">'
-            + '状態:' + json[i].reservation_talking_category
+            + '状態:' + json[0].reservation_talking_category
             + '        </p>'
-            + '        <small class="text-muted">' + json[i].scheduled_end_timestamp + '</small>'
+            + '        <small class="text-muted">' + json[0].scheduled_end_timestamp + '</small>'
             + '      <div class="modal-footer">'
-            + '        <button type="button" class="btn btn-outline-primary" id="' + json[i].conversation_code + '" value="' + json[i].update_timestamp + ',accept" onClick="ConversationListsUpdate(this.id,this.value)">受け入れる</button> '
-            + '        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" id="' + json[i].conversation_code + '" value="' + json[i].update_timestamp + ',cancel" onClick="ConversationListsUpdate(this.id,this.value)">ごめん</button>'
+            + '        <button type="button" class="btn btn-outline-primary" id="' + json[0].conversation_code + '" value="' + json[0].update_timestamp + ',accept" onClick="ConversationListsUpdate(this.id,this.value)">受け入れる</button> '
+            + '        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" id="' + json[0].conversation_code + '" value="' + json[0].update_timestamp + ',cancel" onClick="ConversationListsUpdate(this.id,this.value)">ごめん</button>'
             + '      </div>'
             + '    </div>'
             + '  </div>'
