@@ -779,31 +779,33 @@ async def ConversationListSelect(request: Request,access_token: str,conversation
             query = nbtt_conversation_lists.select().where(nbtt_conversation_lists.c.user_id == values["user_id"]).where(nbtt_conversation_lists.c.scheduled_end_timestamp > now).where(nbtt_conversation_lists.c.is_deleted == False)
             print("function :" + subroutine + " query 2")
         elif len(values["conversation_code"]) == 0 and values["user_id"] == 0 and values["to_user_id"] != 0 : # conversation_codeに値がなく、user_idが0であり、to_user_idが0でない場合、受け取ったto_useridで検索する
-                # 2022/3/27 added start
-                # query = nbtt_conversation_lists.select().where(nbtt_conversation_lists.c.to_user_id == values["to_user_id"]).where(nbtt_conversation_lists.c.scheduled_end_timestamp > now).where(nbtt_conversation_lists.c.is_deleted == False)
-                query = "SELECT \
-                        c.conversation_code,\
-                        c.user_id,\
-                        c.start_timestamp,\
-                        c.scheduled_end_timestamp,\
-                        c.reservation_talking_category,\
-                        c.is_deleted,\
-                        c.regist_timestamp,\
-                        c.regist_user_id,\
-                        c.update_timestamp,\
-                        c.update_user_id,\
-                        n.username_sei,\
-                        n.username_mei\
-                        FROM nbtt_conversation_list c INNER JOIN nbmt_users n \
-                        WHERE c.to_user_id = n.user_id and c.scheduled_end_timestamp > %s and c.is_deleted == False"\
-                    % (now,values["to_user_id"])
-                print("function :" + subroutine + " query 3")
-                # 2022/3/27 added end
+            # 2022/3/27 added start
+            # query = nbtt_conversation_lists.select().where(nbtt_conversation_lists.c.to_user_id == values["to_user_id"]).where(nbtt_conversation_lists.c.scheduled_end_timestamp > now).where(nbtt_conversation_lists.c.is_deleted == False)
+            print("★ここに入るはず")
+            query = "SELECT \
+                    c.conversation_code,\
+                    c.user_id,\
+                    c.start_timestamp,\
+                    c.scheduled_end_timestamp,\
+                    c.reservation_talking_category,\
+                    c.is_deleted,\
+                    c.regist_timestamp,\
+                    c.regist_user_id,\
+                    c.update_timestamp,\
+                    c.update_user_id,\
+                    n.username_sei,\
+                    n.username_mei\
+                    FROM nbtt_conversation_lists c INNER JOIN nbmt_users n on c.to_user_id = n.user_id \
+                    WHERE c.scheduled_end_timestamp > '%s' and c.is_deleted = False and c.to_user_id = %s" \
+                    % (now.strftime('%Y-%m-%d %H:%M:%S'),values["to_user_id"])
+            print("function :" + subroutine + " query 3 len:" + str(len(query)))
+            # 2022/3/27 added end
         else:
             print("nbtt_conversation_lists..conversation_code ='' user_id = 0 to_user_id = 0") # converasation_codeが空で、ユーザIDが0の場合
             query = nbtt_conversation_lists.select()
         print(subroutine + " query4:" + str(query))
         resultset = await database.fetch_all(query)
+        print("★ここに入るはず②")
         if len(resultset) > 0:
             print("resultset:" + str(resultset[0]["user_id"]))
             print(resultset)
