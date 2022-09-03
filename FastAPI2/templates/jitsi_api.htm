@@ -4,27 +4,29 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>jitsi</title>
-  </head>    <body>
+  </head>
+    <body>
     <h1>Hello Jitsi Video Chat !</h1>
     <div id="meet">
       <h2>This is test</h2>
     </div>
-    // Jitsi API—p‚ÌƒXƒNƒŠƒvƒg‚ğ“Ç‚İ‚Ş
-        <script src="https://localhost/external_api.js"></script>
+    // Jitsi APIç”¨ã®ã‚¹ã‚¯ãƒªãƒ—ãƒˆã‚’èª­ã¿è¾¼ã‚€
+        <script src="https://nb-jitsu.hcdev-awspri1.imhds.net/external_api.js"></script>
+
         <script>
-            const domain = 'example.com'; // Jitsi—p‚Ég—p‚µ‚Ä‚¢‚éƒhƒƒCƒ“–¼
+            const domain = 'nb-jitsu.hcdev-awspri1.imhds.net'; // Jitsiç”¨ã«ä½¿ç”¨ã—ã¦ã„ã‚‹ãƒ‰ãƒ¡ã‚¤ãƒ³å
             const options = {
-                roomName: "JitsiMeetAPIExample",  // ƒ`ƒƒƒbƒgƒ‹[ƒ€–¼
+                roomName: "JitsiMeetAPIExample",  // ãƒãƒ£ãƒƒãƒˆãƒ«ãƒ¼ãƒ å
                 width: 700,
                 height: 180,
-                parentNode: document.querySelector('#meet') // ƒrƒfƒIƒ`ƒƒƒbƒg‚ğ•\¦‚·‚é—v‘f‚ÌID
+                parentNode: document.querySelector('#meet'), // ãƒ“ãƒ‡ã‚ªãƒãƒ£ãƒƒãƒˆã‚’è¡¨ç¤ºã™ã‚‹è¦ç´ ã®ID
                 configOverwrite: {},
                 interfaceConfigOverwrite: {}
             }
             const api = new JitsiMeetExternalAPI(domain, options);
-            const api = new JitsiMeetExternalAPI(domain, options);
-            api.executeCommand('displayName', 'My Nickname'); // ƒjƒbƒNƒl[ƒ€i•\¦–¼j‚ğw’è‚·‚é
-            api.executeCommand('subject', 'My Video Chat'); // ƒ`ƒƒƒbƒgƒ‹[ƒ€‚ÌŒ–¼‚ğw’è‚·‚é
-            api.executeCommand('toggleAudio'); // ‰¹º‚ÌƒIƒ“ / ƒIƒtØ‚è‘Ö‚¦‚é        </script>
+            api.executeCommand('displayName', 'My Nickname'); // ãƒ‹ãƒƒã‚¯ãƒãƒ¼ãƒ ï¼ˆè¡¨ç¤ºåï¼‰ã‚’æŒ‡å®šã™ã‚‹
+            api.executeCommand('subject', 'My Video Chat'); // ãƒãƒ£ãƒƒãƒˆãƒ«ãƒ¼ãƒ ã®ä»¶åã‚’æŒ‡å®šã™ã‚‹
+            api.executeCommand('toggleAudio'); // éŸ³å£°ã®ã‚ªãƒ³ / ã‚ªãƒ•åˆ‡ã‚Šæ›¿ãˆã‚‹
+        </script>
     </body>
 </html>
