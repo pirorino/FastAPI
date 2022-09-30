@@ -27,6 +27,10 @@ from .models import nbtt_conversation_lists
 from .models import nbmt_users
 # 2021/12/12 Hirayama added end
 
+# 2022/09/25 Hirayama added start
+from .models import nbet_surveys
+# 2022/09/25 Hirayama added end
+
 from .schemas import UserCreate, UserUpdate, UserSelect, Token
 from .schemas import PointTranCreate, PointTranUpdate, PointTranSelect
 from .schemas import PointStockCreate, PointStockUpdate, PointStockSelect
@@ -36,6 +40,10 @@ from .schemas import CompleteList
 from .schemas import nbtt_user_statusSelect,nbtt_user_statusCreate,nbtt_conversation_listsSelect,nbtt_conversation_listsCreate
 from .schemas import nbmt_usersSelect,nbmt_usersCreate,nbmt_usersUpdate
 # 2021/12/12 Hirayama added end
+
+# 2022/09/25 Hirayama added start
+from .schemas import nbet_surveysCreate,nbet_surveysSelect
+# 2022/09/25 Hirayama added end
 
 import shutil
 # new テンプレート関連の設定 (jinja2)
@@ -260,6 +268,8 @@ async def get_max_userID(database: Database):
 @router.get('/')
 async def get_index(request: Request):
     # 初期画面の表示
+    subroutine = "index"
+    print("function :" + subroutine)
     return templates.TemplateResponse('index.html',{'request': request})
 
 @router.get('/login')
@@ -355,6 +365,25 @@ async def post_pagename(request: Request,pagename: str,access_token: str,param: 
     elif pagename == 'nbcmain':
         print('nbcmain page')
         # page_file = pagename + '.html'
+    # 2022/9/18 modified start
+    elif pagename == 'jitsi_api':
+        # jitsi会話画面
+        print('this is jitsi_api')
+        conversation_code = param.split(':')[0]
+        user_id = param.split(':')[1]
+        if user_id == "":
+            user_id = 0
+        query = "select username_sei,username_mei from nbmt_users where user_id ='%s'"  % (user_id)
+        print(query)
+        result = await database.fetch_all(query)
+        result_length = len(result)
+        if result_length == 0:
+            fullname = "anonymous"
+        else:
+            fullname = result[0][0] + " " + result[0][1] 
+        print("conversation_code:" + conversation_code + " fullname:" + fullname)
+        return templates.TemplateResponse(page_file,{'request': request,'chatroomName': conversation_code,'fullname': fullname,'userid': user_id})
+    # 2022/9/18 modified end
     elif pagename == 'pointtranlist':
         # ポイントトランザクションの一覧処理
         print('this is pointtranlist')
@@ -658,7 +687,7 @@ async def ConversationListCreate(request: Request,access_token: str,conversation
         user = await check_token(access_token , 'access_token')
         # 現在時間
         now = datetime.now()
-        print(now.strftime('%Y%m%d%H%M%S'))
+        # print(now.strftime('%Y%m%d%H%M%S'))
 
         # nbtt_conversation_listを作成
         # values = conversation_list.dict()
@@ -670,11 +699,12 @@ async def ConversationListCreate(request: Request,access_token: str,conversation
         # print("starttime and endtime:")
         # print(starttime)
         # print(scheduled_end_timestamp)
-        print("time:")
-        print(starttime.strftime('%Y-%m-%d %H:%M:%S'))
-        print("now:")
-        print(starttime)
-        print(datetime.strptime(starttime.strftime('%Y-%m-%d %H:%M:%S'),'%Y-%m-%d %H:%M:%S'))
+        # print("time:")
+        # print(starttime.strftime('%Y-%m-%d %H:%M:%S'))
+        # print("now:")
+        # print(starttime)
+        # print(datetime.strptime(starttime.strftime('%Y-%m-%d %H:%M:%S'),'%Y-%m-%d %H:%M:%S'))
+
         values = {
             "conversation_code": format(dicts["user_id"],'05') + now.strftime('%Y%m%d%H%M%S'),
             "user_id": dicts["user_id"], # 2022/2/22 modified
@@ -693,7 +723,50 @@ async def ConversationListCreate(request: Request,access_token: str,conversation
             "update_timestamp": datetime.strptime(starttime.strftime('%Y-%m-%d %H:%M:%S'),'%Y-%m-%d %H:%M:%S'),
             "update_user_id": dicts["update_user_id"]
         }
-        print("execute query")  
+
+        # 2022/09/18 既に会話が始まっていたらキャンセル処理
+        # 会話相手が既にconversationlistに存在し、通話中状態、かつ終了を過ぎていない場合　は申し込みNG
+        query = "SELECT \
+            conversation_code,\
+            user_id,\
+            start_timestamp,\
+            scheduled_end_timestamp,\
+            reservation_talking_category,\
+            is_deleted,\
+            regist_timestamp,\
+            regist_user_id,\
+            update_timestamp,\
+            update_user_id \
+            FROM nbtt_conversation_lists \
+            WHERE (user_id = %s or to_user_id = %s) and reservation_talking_category = 'talking' and scheduled_end_timestamp > '%s' and is_deleted = False " \
+            % (values["to_user_id"],values["to_user_id"],now.strftime('%Y-%m-%d %H:%M:%S'))
+        print("function :" + subroutine + " query talking check len:" + str(len(query)))
+        resultset = await database.fetch_all(query)
+        if len(resultset) > 0: # 会話相手がtalking状態
+            print("length of resultset :" + str(len(resultset)))
+        # if len(resultset) == 0: # 会話相手がtalking状態 debug用
+            print("now talking.")
+            return_values = {
+                "conversation_code": values["conversation_code"],
+                "user_id": values["user_id"],
+                "to_user_id": values["to_user_id"],
+                "start_timestamp": values["start_timestamp"].strftime('%Y-%m-%d %H:%M:%S'),
+                "scheduled_end_timestamp": values["scheduled_end_timestamp"].strftime('%Y-%m-%d %H:%M:%S'),
+                "reservation_talking_category": "missing",
+                "is_deleted": True,
+                "regist_timestamp": values["regist_timestamp"].strftime('%Y-%m-%d %H:%M:%S'),
+                "regist_user_id": values["regist_user_id"],
+                "update_timestamp": values["update_timestamp"].strftime('%Y-%m-%d %H:%M:%S'),
+                "update_user_id": values["update_user_id"]
+            }
+            return {**return_values}
+        else:
+            print("query talking check no match OK.")
+    except Exception as e:
+        return {"errorcode": 1,"msg": str(e) + "conversation_list query talking checkでエラーが発生しました。"}
+        # 2022/09/18 ここまで
+    try:
+        print("execute nbtt_conversation_lists.insert query")  
         query = nbtt_conversation_lists.insert() # これはDBの方で、受け取ったパラメータとは別です
 
         # SQLを組み立てる場合はこんな感じになります
@@ -733,19 +806,6 @@ async def ConversationListCreate(request: Request,access_token: str,conversation
             "update_timestamp": values["update_timestamp"].strftime('%Y-%m-%d %H:%M:%S'),
             "update_user_id": values["update_user_id"]
         }
-        # for test
-        # {
-        #   "conversation_code": "11111",
-        #   "user_id": 1,
-        #   "start_timestamp": "2021-11-24 19:39:00",
-        #   "scheduled_end_timestamp": "2021-11-24 19:39:01",
-        #   "reservation_talking_category": "reserve",
-        #   "is_deleted": true,
-        #   "regist_timestamp": "2021-11-24 19:39:02",
-        #   "regist_user_id": 2,
-        #   "update_timestamp": "2021-11-24 19:39:03",
-        #   "update_user_id": 3
-        # }
         return {**return_values}
     except Exception as e:
         raise HTTPException(status_code=401, detail=subroutine + ":" + str(e))
@@ -781,7 +841,7 @@ async def ConversationListSelect(request: Request,access_token: str,conversation
         elif len(values["conversation_code"]) == 0 and values["user_id"] == 0 and values["to_user_id"] != 0 : # conversation_codeに値がなく、user_idが0であり、to_user_idが0でない場合、受け取ったto_useridで検索する
             # 2022/3/27 added start
             # query = nbtt_conversation_lists.select().where(nbtt_conversation_lists.c.to_user_id == values["to_user_id"]).where(nbtt_conversation_lists.c.scheduled_end_timestamp > now).where(nbtt_conversation_lists.c.is_deleted == False)
-            print("★ここに入るはず")
+            # print("★ここに入るはず")
             query = "SELECT \
                     c.conversation_code,\
                     c.user_id,\
@@ -800,12 +860,13 @@ async def ConversationListSelect(request: Request,access_token: str,conversation
                     % (now.strftime('%Y-%m-%d %H:%M:%S'),values["to_user_id"])
             print("function :" + subroutine + " query 3 len:" + str(len(query)))
             # 2022/3/27 added end
+            # 2022/9/25 デバッグ用にそのままにするが、最終的にはreservation_talking_category=proposedを条件に入れる
         else:
             print("nbtt_conversation_lists..conversation_code ='' user_id = 0 to_user_id = 0") # converasation_codeが空で、ユーザIDが0の場合
             query = nbtt_conversation_lists.select()
-        print(subroutine + " query4:" + str(query))
+        # print(subroutine + " query4:" + str(query))
         resultset = await database.fetch_all(query)
-        print("★ここに入るはず②")
+        # print("★ここに入るはず②")
         if len(resultset) > 0:
             print("resultset:" + str(resultset[0]["user_id"]))
             print(resultset)
@@ -852,22 +913,31 @@ async def ConversationListUpdate(request: Request,access_token: str,conversation
         dicts = conversation_list.dict()
         values = {
             "conversation_code": dicts["conversation_code"],
-            "user_id": dicts["user_id"]
+            "user_id": dicts["user_id"],
+            "reservation_talking_category": dicts["reservation_talking_category"]
         }
 
-        # conversation_codeのみでupdate対象を決定
-        query = nbtt_conversation_lists.update().where(nbtt_conversation_lists.c.conversation_code == values["conversation_code"]).values(reservation_talking_category="talking",update_timestamp=now,update_user_id=UserId)
-        print("query:" + str(query))
+        query = nbtt_conversation_lists.update().where(nbtt_conversation_lists.columns.conversation_code==values["conversation_code"]).values( \
+            reservation_talking_category=values["reservation_talking_category"], \
+            update_timestamp=now, \
+            update_user_id=UserId \
+        )
+
+        print("query ConversationListUpdate:" + str(query))
+        print("query param now:" + str(now) +" update_user_id:" + str(UserId) + " conversation_code:" + values["conversation_code"] + " reservation_talking_category:" + values["reservation_talking_category"] )
         resultset = await database.execute(query)
         # 本当はupdate件数をcheckしたいのだが、出す方法がない(ストアドが必要)
+        print("nbtt_conversation_lists.update before result")
+        await transaction.commit()
         return {"result": "update success"} # 正常更新完了
     except ValueError as v: # update失敗（対象なし）
-        print("query:rollbacked")
+        print("query:ConversationListUpdate rollbacked")
         await transaction.rollback()
         return {"errorcode": 2,"msg": str(v) + " conversation_listでupdate失敗(対象なし)"}
     except Exception as e: # query失敗（その他のエラー）
         print("query:rollbacked")
         await transaction.rollback()
+        print("error occured:" +  str(e))
         return {"errorcode": 1,"msg": str(e) + " conversation_listでエラーが発生しました。"}
         # raise HTTPException(status_code=401, detail=subroutine + ":" + str(e))
 
@@ -971,3 +1041,51 @@ async def UsersUpdate(request: Request, access_token: str, param: str, database:
 
     except Exception as e:
         raise HTTPException(status_code=401, detail=subroutine + ":" + str(e))
+
+# ----------------- 2022/09/25 hirayama added
+@router.post("/users/SurveysCreate", response_model=nbet_surveysSelect)
+async def SurveysCreate(surveys: nbet_surveysCreate, database: Database = Depends(get_connection)):
+    # nbet_surveyを新規登録します。
+    try:
+        subroutine = "nbet_surveysCreate"
+        print("function :" + subroutine)
+
+        now = datetime.now()
+        print(subroutine + now.strftime('%Y%m%d%H%M%S'))
+
+        dicts = surveys.dict()
+        values = {
+            "user_id": dicts["user_id"],
+            "to_user_id": dicts["to_user_id"],
+            "conversation_code": dicts["conversation_code"],
+            "talktime_length": dicts["talktime_length"],
+            "comment": dicts["comment"],
+            "is_deleted": dicts["is_deleted"],
+            "regist_timestamp": now,
+            "regist_user_id": dicts["regist_user_id"],
+            "update_timestamp": datetime.strptime(dicts["update_timestamp"], '%Y-%m-%d %H:%M:%S'),
+            "update_user_id": dicts["update_user_id"]
+        }
+        query = nbet_surveys.insert()
+        print(subroutine + "query")  
+
+        print(values)
+        ret = await database.execute(query,values)
+
+        # 戻り値は文字列・数値なのでtimestamp項目は文字列フォーマットに変換
+        return_values = {
+            "user_id": values["user_id"],
+            "to_user_id": values["to_user_id"],
+            "conversation_code": values["conversation_code"],
+            "talktime_length": values["talktime_length"],
+            "comment": values["comment"],
+            "is_deleted": values["is_deleted"],
+            "regist_timestamp": values["regist_timestamp"],
+            "regist_user_id": values["regist_user_id"],
+            "update_timestamp": values["update_timestamp"],
+            "update_user_id": dicts["update_user_id"]
+        }
+        return {**return_values}
+    except Exception as e:
+        raise HTTPException(status_code=401, detail=subroutine + ":" + str(e))
+# ----------------- 2022/09/25 hirayama added end
