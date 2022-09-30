@@ -92,4 +92,18 @@ nbmt_users = sqlalchemy.Table(
     sqlalchemy.Column("update_timestamp", sqlalchemy.DateTime),
     sqlalchemy.Column("update_user_id", sqlalchemy.Integer)
 )
+nbet_surveys = sqlalchemy.Table(
+    "nbet_surveys",
+    metadata,
+    sqlalchemy.Column("user_id", sqlalchemy.Integer, nullable=False),
+    sqlalchemy.Column("to_user_id", sqlalchemy.Integer, nullable=False),
+    sqlalchemy.Column("conversation_code", sqlalchemy.Integer, nullable=False),
+    sqlalchemy.Column("talktime_length", sqlalchemy.Integer, nullable=False),
+    sqlalchemy.Column("comment", sqlalchemy.String(512)),
+    sqlalchemy.Column("is_deleted", sqlalchemy.Boolean(), nullable=False),
+    sqlalchemy.Column("regist_timestamp", sqlalchemy.DateTime),
+    sqlalchemy.Column("regist_user_id", sqlalchemy.Integer),
+    sqlalchemy.Column("update_timestamp", sqlalchemy.DateTime),
+    sqlalchemy.Column("update_user_id", sqlalchemy.Integer)
+)
 metadata.create_all(bind=engine)
