@@ -192,3 +192,29 @@ class nbmt_usersSelect(BaseModel):
     regist_user_id: int
     update_timestamp: str
     update_user_id: int
+
+# 20220925 hirayama added start 
+class nbet_surveysCreate(BaseModel):
+    user_id: int
+    to_user_id: int
+    conversation_code: str
+    talktime_length: int
+    comment: str
+    is_deleted: bool
+    regist_timestamp: str
+    regist_user_id: int
+    update_timestamp: str
+    update_user_id: int
+
+class nbet_surveysSelect(BaseModel):
+    user_id: int
+    to_user_id: int
+    conversation_code: str
+    talktime_length: int
+    comment: str
+    is_deleted: bool
+    regist_timestamp: str
+    regist_user_id: int
+    update_timestamp: str
+    update_user_id: int
+# 20220925 hirayama added end
