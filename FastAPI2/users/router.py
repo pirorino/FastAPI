@@ -1046,26 +1046,48 @@ async def UsersUpdate(request: Request, access_token: str, param: str, database:
 @router.post("/users/SurveysCreate", response_model=nbet_surveysSelect)
 async def SurveysCreate(surveys: nbet_surveysCreate, database: Database = Depends(get_connection)):
     # nbet_surveyを新規登録します。
+    subroutine = "nbet_surveysCreate"
+    print("function :" + subroutine)
+
+    now = datetime.now()
+    talktimemin = 0
+
+    dicts = surveys.dict()
+    values = {
+        "respondent_id": dicts["respondent_id"],
+        "conversation_code": dicts["conversation_code"],
+        "talktime_length": dicts["talktime_length"],
+        "comment": dicts["comment"],
+        "is_deleted": dicts["is_deleted"],
+        "regist_timestamp": now,
+        "regist_user_id": dicts["regist_user_id"],
+        "update_timestamp": now,
+        "update_user_id": dicts["update_user_id"]
+    }
+
+    # query 1
     try:
-        subroutine = "nbet_surveysCreate"
-        print("function :" + subroutine)
+        query = "SELECT *\
+        FROM nbtt_conversation_lists\
+        WHERE conversation_code = '%s'" \
+        % (values["conversation_code"])
+        print("function :" + subroutine + " query:" + query)
+        query = nbtt_conversation_lists.select()
+        resultset = await database.fetch_all(query)
+        if len(resultset) > 0:
+            # print("resultset:" + str(resultset[0][0]) + ":" + str(resultset[0][2]) + ":" + str(resultset[0][3]) + ":" + str(resultset[0][4]))
+            talktime = resultset[0][4] - resultset[0][3]
+            # timedelta（時刻の差）にはminがないので計算する。//はあまりを切り捨て
+            talktimemin = talktime.seconds // 60
+        else:
+            print("query1 no match.")
+    except Exception as e:
+        print(subroutine + " query1 error" + ":" + str(e))
 
-        now = datetime.now()
-        print(subroutine + now.strftime('%Y%m%d%H%M%S'))
+    # query 2
+    values["talktime_length"] = talktimemin
 
-        dicts = surveys.dict()
-        values = {
-            "user_id": dicts["user_id"],
-            "to_user_id": dicts["to_user_id"],
-            "conversation_code": dicts["conversation_code"],
-            "talktime_length": dicts["talktime_length"],
-            "comment": dicts["comment"],
-            "is_deleted": dicts["is_deleted"],
-            "regist_timestamp": now,
-            "regist_user_id": dicts["regist_user_id"],
-            "update_timestamp": datetime.strptime(dicts["update_timestamp"], '%Y-%m-%d %H:%M:%S'),
-            "update_user_id": dicts["update_user_id"]
-        }
+    try:
         query = nbet_surveys.insert()
         print(subroutine + "query")  
 
@@ -1074,17 +1096,17 @@ async def SurveysCreate(surveys: nbet_surveysCreate, database: Database = Depend
 
         # 戻り値は文字列・数値なのでtimestamp項目は文字列フォーマットに変換
         return_values = {
-            "user_id": values["user_id"],
-            "to_user_id": values["to_user_id"],
+            "respondent_id": values["respondent_id"],
             "conversation_code": values["conversation_code"],
             "talktime_length": values["talktime_length"],
             "comment": values["comment"],
             "is_deleted": values["is_deleted"],
-            "regist_timestamp": values["regist_timestamp"],
+            "regist_timestamp": values["regist_timestamp"].strftime('%Y%m%d%H%M%S'),
             "regist_user_id": values["regist_user_id"],
-            "update_timestamp": values["update_timestamp"],
+            "update_timestamp": values["update_timestamp"].strftime('%Y%m%d%H%M%S'),
             "update_user_id": dicts["update_user_id"]
         }
+        print(subroutine + ":completed")
         return {**return_values}
     except Exception as e:
         raise HTTPException(status_code=401, detail=subroutine + ":" + str(e))
