@@ -48,13 +48,15 @@
         }
 
         async function submitSurvey(){
+            var answer1 = surveyform.elements.question1.value;
+            var answer2 = surveyform.elements.question2.value;
+            var comment = "question1=" + answer1 + "&question2=" + answer2;
             var fetch_url = 'http://' + location.host + '/users/SurveysCreate?access_token=';
             data = {
-                "user_id": {{userid}},
-                "to_user_id": 0,
+                "respondent_id": {{userid}},
                 "conversation_code": "{{chatroomName}}",
                 "talktime_length": 0,
-                "comment": "aaaaaa",
+                "comment": comment,
                 "is_deleted": false,
                 "regist_timestamp": "",
                 "regist_user_id": 0,
@@ -72,12 +74,12 @@
             })
             .then(response => {
                 if( response.status === 200 ){
-                    return response.json();
+                    windows.close();    //正常終了、Close
                 } else if (response.status === 401 ){
-                    alert("surveyCreate error occured1");
+                    alert("surveyCreate error occured:401");
                     return response.json();
                 } else {
-                    alert("surveyCreate error occured2");
+                    alert("surveyCreate error occured:other");
                     throw new Error(response.json());
                 }
             })
