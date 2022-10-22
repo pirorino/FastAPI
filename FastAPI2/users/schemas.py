@@ -195,8 +195,7 @@ class nbmt_usersSelect(BaseModel):
 
 # 20220925 hirayama added start 
 class nbet_surveysCreate(BaseModel):
-    user_id: int
-    to_user_id: int
+    respondent_id: int
     conversation_code: str
     talktime_length: int
     comment: str
@@ -207,8 +206,7 @@ class nbet_surveysCreate(BaseModel):
     update_user_id: int
 
 class nbet_surveysSelect(BaseModel):
-    user_id: int
-    to_user_id: int
+    respondent_id: int
     conversation_code: str
     talktime_length: int
     comment: str
