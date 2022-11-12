@@ -368,6 +368,7 @@ async def post_pagename(request: Request,pagename: str,access_token: str,param: 
     # 2022/9/18 modified start
     elif pagename == 'jitsi_api':
         # jitsi会話画面
+        now = datetime.now()
         print('this is jitsi_api')
         conversation_code = param.split(':')[0]
         user_id = param.split(':')[1]
@@ -382,6 +383,17 @@ async def post_pagename(request: Request,pagename: str,access_token: str,param: 
         else:
             fullname = result[0][0] + " " + result[0][1] 
         print("conversation_code:" + conversation_code + " fullname:" + fullname)
+
+        # 受け側の場合はreservation_talking_category の更新 2022/11/12 added
+        query = nbtt_conversation_lists.update().where(nbtt_conversation_lists.columns.conversation_code==conversation_code).where(nbtt_conversation_lists.columns.to_user_id==int(user_id)).values( \
+        reservation_talking_category="talking", \
+        update_timestamp=now, \
+        update_user_id=int(user_id) \
+        )
+        print("query jitsi_api - ConversationListUpdate:" + str(query))
+        resultset = await database.execute(query)
+        # 受け側の場合はreservation_talking_category の更新 2022/11/12 added end
+
         return templates.TemplateResponse(page_file,{'request': request,'chatroomName': conversation_code,'fullname': fullname,'userid': user_id})
     # 2022/9/18 modified end
     elif pagename == 'pointtranlist':
