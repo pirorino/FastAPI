@@ -868,11 +868,10 @@ async def ConversationListSelect(request: Request,access_token: str,conversation
                     n.username_sei,\
                     n.username_mei\
                     FROM nbtt_conversation_lists c INNER JOIN nbmt_users n on c.to_user_id = n.user_id \
-                    WHERE c.scheduled_end_timestamp > '%s' and c.is_deleted = False and c.to_user_id = %s" \
-                    % (now.strftime('%Y-%m-%d %H:%M:%S'),values["to_user_id"])
+                    WHERE c.scheduled_end_timestamp > '%s' and c.is_deleted = False and c.to_user_id = %s and c.reservation_talking_category = '%s'" \
+                    % (now.strftime('%Y-%m-%d %H:%M:%S'),values["to_user_id"],"proposed")
             print("function :" + subroutine + " query 3 len:" + str(len(query)))
             # 2022/3/27 added end
-            # 2022/9/25 デバッグ用にそのままにするが、最終的にはreservation_talking_category=proposedを条件に入れる
         else:
             print("nbtt_conversation_lists..conversation_code ='' user_id = 0 to_user_id = 0") # converasation_codeが空で、ユーザIDが0の場合
             query = nbtt_conversation_lists.select()
