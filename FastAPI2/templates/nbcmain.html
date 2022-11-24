@@ -163,7 +163,7 @@
       "to_user_id": Number(to_user_id),
       "start_timestamp": start_dateStr,
       "scheduled_end_timestamp": end_dateStr,
-      "reservation_talking_category": "proposed",
+      "reservation_talking_category": "propose",
       "is_deleted": false,
       "regist_timestamp": "2021-01-01 00:00:00", // サーバ側でセットするので適当
       "regist_user_id": 0, // サーバ側でセットするので適当
@@ -317,7 +317,7 @@
           }
       })
       .then(function(json){
-        if (json.reservation_talking_category === "accepted"){
+        if (json[0].reservation_talking_category === "accepted"){
           $("#requestModal-all").empty();
           // proposal_user = json.user_id
             h = '<div class="modal fade" id="requestModal" data-backdrop="static" tabindex="-1" aria-labelledby="requestModalLabel" aria-hidden="true">'
@@ -330,9 +330,9 @@
                 + '      <div class="modal-body">'
                 + proposed_username + 'より申し込みが受け付けられました'
                 + '      </div>'
-                + '        <small class="text-muted">' + json.scheduled_end_timestamp + '</small>'
+                + '        <small class="text-muted">' + json[0].scheduled_end_timestamp + '</small>'
                 + '      <div class="modal-footer">'
-                + '        <button type="button" class="btn btn-outline-primary" data-bs-dismiss="modal" id="' + json.conversation_code + '" value="' + json.update_timestamp + '" onClick="StartTalking(this.id,this.value)">トークを開始する</button> '
+                + '        <button type="button" class="btn btn-outline-primary" data-bs-dismiss="modal" id="' + json[0].conversation_code + '" value="' + json[0].update_timestamp + '" onClick="StartTalking(this.id,this.value)">トークを開始する</button> '
                 + '      </div>'
                 + '    </div>'
                 + '  </div>'
@@ -510,7 +510,8 @@
                       + '      </div>'
                       + '      <div class="modal-footer">'
                       + '        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>'
-                      + '        <button type="button" class="btn btn-outline-primary" data-bs-dismiss="modal" id="' + conversation_code + '" value="' + update_timestamp + '" onClick="StartTalking(this.id,this.value)">トークを開始する</button> '
+                      // + '        <button type="button" class="btn btn-outline-primary" data-bs-dismiss="modal" id="' + conversation_code + '" value="' + update_timestamp + '" onClick="StartTalking(this.id,this.value)">トークを開始する</button> '
+                      + '        <button type="button" class="btn btn-outline-primary" data-bs-dismiss="modal" id="' + conversation_code + '" value="' + json[0].update_timestamp + ',talking" onClick="ConversationListsUpdate(this.id,this.value)"">トークを開始する</button> '
                       + '      </div>'
                       + '    </div>'
                       + '  </div>'
@@ -545,61 +546,12 @@
     document.jitsi_form.method = 'post';
     document.jitsi_form.target = 'jitsi_window';
     document.jitsi_form.submit();  
+    // アンケート画面はjitsi_apiの先で表示する
   }
   // トーク開始 2022/9/19 modified end
 
-  async function finishConversation(conversation_code,update_timestamp){
-    token = sessionStorage.getItem("TOKEN");    //セッションに保存
-    var fetch_url = 'http://' + location.host + '/users/ConversationListsUpdate?access_token=';
-    data = {
-        "conversation_code": conversation_code,
-        "user_id": 0,
-        "to_user_id": 0,
-        "start_timestamp": "",
-        "scheduled_end_timestamp": "",
-        "reservation_talking_category": "finished",
-        "is_deleted": false,
-        "regist_timestamp": "",
-        "regist_user_id": "",
-        "update_timestamp": "",
-        "update_user_id": ""
-      }
-      return await fetch(fetch_url + token,
-      {
-          method: 'POST',
-          headers: {
-              'Content-Type': 'application/json',
-              'accept': 'application/json'
-          },
-          body: JSON.stringify(data)
-      })
-      .then(response => {
-          if( response.status === 200 ){
-            return response.json();
-          } else if (response.status === 401 ){
-            onpolling = 1;
-            return response.json();
-          } else {
-            onpolling = 1;
-            throw new Error(response.json());
-          }
-      })
-      .then(
-        // ここにアンケート画面表示を入れる
-        onpolling=1 // 通常状態に戻る
-      )
-      .catch(err => {
-          console.log(err);
-          onpolling=1;
-          return err;
-      })
-  }
-
   // 画面起動後にポーリング処理実行開始
   window.onload = RequestedPolling(); // 他からの会話申し込みを受けているかポーリング
-
-  // テスト用
-  // window.onload = getRequestedConversationList({{ user['user_id'] }}); // 他からの会話申し込みを受けているか１回切りチェックdebug用
 
   //dropdown用function
   $(function(){
@@ -609,22 +561,6 @@
       });
   });
 
-
-  async function call_jisti(jiti_domain){
-    const domain = "jitsi_domain"; // Jitsi用に使用しているドメイン名'
-    const options = {
-        roomName: "JitsiMeetAPIExample",  // チャットルーム名'
-        width: 700,
-        height: 180,
-        parentNode: document.querySelector("#meet"), // ビデオチャットを表示する要素のID'
-        configOverwrite: {},
-        interfaceConfigOverwrite: {}
-      }
-      const api = new JitsiMeetExternalAPI(domain, options);
-      api.executeCommand("displayName", "My Nickname"); // ニックネーム（表示名）を指定する
-      api.executeCommand("subject", "My Video Chat"); // チャットルームの件名を指定する
-      api.executeCommand("toggleAudio"); // 音声のオン / オフ切り替える
-  }  
 </script>
 
 {% endblock %}
