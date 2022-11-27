@@ -192,7 +192,7 @@
       $("#requestModal-all").empty();
         // proposed_user = json.to_user_name
         // 相手が会話中の場合は会話させない 2022/9/18
-        if (json.reservation_talking_category === "missing"){
+        if (json.reservation_talking_category === "talking"){ // 2022/11/24 状態をtalkingに修正
           proposed_username = to_user_name
           h = '<div class="modal fade" id="requestModal" data-backdrop="static" tabindex="-1" aria-labelledby="requestModalLabel" aria-hidden="true">'
                 + '  <div class="modal-dialog">'
