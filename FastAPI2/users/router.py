@@ -764,7 +764,6 @@ async def ConversationListCreate(request: Request,access_token: str,conversation
                 "to_user_id": values["to_user_id"],
                 "start_timestamp": values["start_timestamp"].strftime('%Y-%m-%d %H:%M:%S'),
                 "scheduled_end_timestamp": values["scheduled_end_timestamp"].strftime('%Y-%m-%d %H:%M:%S'),
-                # "reservation_talking_category": "missing",
                 "reservation_talking_category": "talking", # 2022/12/1 debug
                 "is_deleted": True,
                 "regist_timestamp": values["regist_timestamp"].strftime('%Y-%m-%d %H:%M:%S'),
