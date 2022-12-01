@@ -119,3 +119,21 @@ curl -X POST "http://localhost:8000/users/create" -H  "accept: application/json"
 このユーザ登録により、usersにレコードが1行追加される。
 パスワードはハッシュがかけられ登録されるので、パスワードは記憶しておくこと
 
+■テスト用Conversation_lists定義
+テスト用conversation_json
+
+{
+  "conversation_code": "0000220221201200300",
+  "user_id": 0,
+  "to_user_id": 2,
+  "start_timestamp": "2022-12-01 16:07:00",
+  "scheduled_end_timestamp": "2022-12-31 23:00:38",
+  "reservation_talking_category": "proposed",
+  "is_deleted": true,
+  "regist_timestamp": "2022-12-01 20:07:00",
+  "regist_user_id": 0,
+  "update_timestamp": "2022-12-01 20:00:38",
+  "update_user_id": 0
+}
+
+
