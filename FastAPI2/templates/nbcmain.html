@@ -112,7 +112,7 @@
   // 会話するボタン押下後のモーダル表示。話す時間を選択し、申し込みボタンが押せる
   async function ShowRequestModal(to_user_id,to_user_name){
     conversationtime=1
-    onpolling = 3; // 会話申し込みを始めたときから申し込むまではポーリングは停止する
+    onpolling = OnPolling_TALKING_OFF; // 会話申し込みを始めたときから申し込むまではポーリングは停止する
     h = '<div class="modal fade" id="requestModal" data-backdrop="static" tabindex="-1" aria-labelledby="requestModalLabel" aria-hidden="true">'
         + '  <div class="modal-dialog">'
         + '    <div class="modal-content">'
@@ -513,7 +513,7 @@
           var requestModalText = document.getElementById("requestModalText");
           var modalButtonText = document.getElementById(conversation_code);
           modalLabel.innerHTML="会話中";
-          requestModalText.innerHTML="相手と会話中です";
+          requestModalText.innerHTML="会話が終了したら閉じてください";
           requestModalInfo.remove();
           modalButtonText.innerHTML="閉じる"
           modalButtonText.onclick = "";
