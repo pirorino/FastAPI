@@ -872,7 +872,7 @@ async def ConversationListSelect(request: Request,access_token: str,conversation
                     WHERE c.scheduled_end_timestamp > '%s' and c.is_deleted = False and c.to_user_id = %s and c.reservation_talking_category = '%s'" \
                     % (now.strftime('%Y-%m-%d %H:%M:%S'),values["to_user_id"],values["reservation_talking_category"])
                     # % (now.strftime('%Y-%m-%d %H:%M:%S'),values["to_user_id"],"proposed") 20221124 modified
-                print("function :" + subroutine + " query 3 len:" + str(len(query)))
+            print("function :" + subroutine + " query 3 len:" + str(len(query)))
             # 2022/3/27 added end
         else:
             print("nbtt_conversation_lists..conversation_code ='' user_id = 0 to_user_id = 0") # converasation_codeが空で、ユーザIDが0の場合
