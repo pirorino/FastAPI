@@ -764,7 +764,8 @@ async def ConversationListCreate(request: Request,access_token: str,conversation
                 "to_user_id": values["to_user_id"],
                 "start_timestamp": values["start_timestamp"].strftime('%Y-%m-%d %H:%M:%S'),
                 "scheduled_end_timestamp": values["scheduled_end_timestamp"].strftime('%Y-%m-%d %H:%M:%S'),
-                "reservation_talking_category": "missing",
+                # "reservation_talking_category": "missing",
+                "reservation_talking_category": "talking", # 2022/12/1 debug
                 "is_deleted": True,
                 "regist_timestamp": values["regist_timestamp"].strftime('%Y-%m-%d %H:%M:%S'),
                 "regist_user_id": values["regist_user_id"],
@@ -839,7 +840,8 @@ async def ConversationListSelect(request: Request,access_token: str,conversation
         values = {
             "conversation_code": dicts["conversation_code"],
             "user_id": dicts["user_id"],
-            "to_user_id": dicts["to_user_id"]
+            "to_user_id": dicts["to_user_id"],
+            "reservation_talking_category": dicts["reservation_talking_category"] # 20221124 modified
         }
         now = datetime.now()
         print("debug:" + now.strftime('%Y%m%d%H%M%S') + " conversation_code length:" + str(len(dicts["conversation_code"])) + " user_id:" + str(dicts["user_id"]) + " to_user_id:" + str(dicts["to_user_id"]))
@@ -869,8 +871,9 @@ async def ConversationListSelect(request: Request,access_token: str,conversation
                     n.username_mei\
                     FROM nbtt_conversation_lists c INNER JOIN nbmt_users n on c.to_user_id = n.user_id \
                     WHERE c.scheduled_end_timestamp > '%s' and c.is_deleted = False and c.to_user_id = %s and c.reservation_talking_category = '%s'" \
-                    % (now.strftime('%Y-%m-%d %H:%M:%S'),values["to_user_id"],"proposed")
-            print("function :" + subroutine + " query 3 len:" + str(len(query)))
+                    % (now.strftime('%Y-%m-%d %H:%M:%S'),values["to_user_id"],values["reservation_talking_category"])
+                    # % (now.strftime('%Y-%m-%d %H:%M:%S'),values["to_user_id"],"proposed") 20221124 modified
+                print("function :" + subroutine + " query 3 len:" + str(len(query)))
             # 2022/3/27 added end
         else:
             print("nbtt_conversation_lists..conversation_code ='' user_id = 0 to_user_id = 0") # converasation_codeが空で、ユーザIDが0の場合
