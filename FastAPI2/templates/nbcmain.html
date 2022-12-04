@@ -243,6 +243,9 @@
                 + '        <p class="card-text">'
                 + '終了時刻:' + json.scheduled_end_timestamp
                 + '        </p>'
+                + '        <p class="card-text">'
+                + 'conversation_code:' + json.conversation_code
+                + '        </p>'
                 + '      </div>'
                 + '      <div class="modal-footer">'
                 + '        <button type="button" id="' + json.conversation_code + '" class="btn btn-secondary" data-bs-dismiss="modal" value ="' + json.update_timestamp + ',cancel" onclick="SetOnPolling(OnPolling_SEEK);ConversationListsUpdate(this.id ,this.value)">キャンセル</button>'
@@ -267,9 +270,10 @@
     })
   }
 
-    // 申し込み後、相手から承諾が来たかポーリングする。10秒ごとにgetConversationLists実行
+  // 申し込み後、相手から承諾が来たかポーリングする。10秒ごとにgetConversationLists実行
   async function RequestPolling(conversation_code,proposed_username){
     const intervalMs = 10000;
+
     // インターバルだけ待ってgetConversationListsをselectするPromiseを作成するヘルパメソッド
     const poll = (milliSeconds) => new Promise(resolve => {
       setTimeout(() => resolve(getRequestConversationList(conversation_code,proposed_username)), milliSeconds);
@@ -277,7 +281,11 @@
 
     const wait = async () => {
       while (true) {
-        await poll(intervalMs);
+        if (onpolling === OnPolling_REQ){ // 2022/12/4 リクエストポーリング状態でなければ終了させる
+          await poll(intervalMs);
+        } else{
+          return;
+        }
       }
     };
 
@@ -352,10 +360,12 @@
           //myModal.show();
           // $('#requestModal').modal()
           //onpolling=3; // トーク開始待ち状態は3
+          return; // 20221204 h.hirayama debug 古いconversation_listsで検索を続けてしまう
         }
       })
       .catch(err => {
           console.log(err);
+          alert("getRequestConversationList でデータが取れないエラー。reservation_talking_categoryが空");
           onpolling=OnPolling_SEEK;
           return err;
       })
@@ -505,7 +515,8 @@
       .then(function(json){
         // (1)の場合 これから会話を始める宣言
         if( category === "accepted"){
-          StartTalking(conversation_code,update_timestamp);
+          // StartTalking(conversation_code,update_timestamp); 2022/12/04 h.hirayama modified
+          StartTalking(conversation_code,update_timestamp,"requested");
           onpolling = OnPolling_TALKING_OFF // 会話中は申し込まないし受けない
         // (2)の場合 これから会話を始める宣言
         } else if( category === "talking"){
@@ -541,7 +552,8 @@
             var myModal = new bootstrap.Modal(document.getElementById('requestModal'), backdrop=true);
             myModal.show();
  */
-          StartTalking(conversation_code,update_timestamp);
+        //  StartTalking(conversation_code,update_timestamp); 2022/12/4 h.hirayama modified
+          StartTalking(conversation_code,update_timestamp,"request");
         // (3)(4)の場合
         } else {
         // 特に何も表示しない
@@ -556,14 +568,16 @@
   }
 
   // トーク開始 2022/9/19 modified start
-  async function StartTalking(conversation_code,update_timestamp){
+  async function StartTalking(conversation_code,update_timestamp,join_mode){
+  // async function StartTalking(conversation_code,update_timestamp){ 20221204 h.hirayama modfied
     // $("#requestModal-all").empty();
 
     var next_url1 = 'http://' + location.host + '/pages/jitsi_api';
     access_token = sessionStorage.getItem("TOKEN");    //セッションに保存
     window.open('', 'jitsi_window');  
     // フォーム
-    action_str = next_url1 + '?access_token=' + access_token + '&param=' + conversation_code + ':' + user_id,'';
+    // action_str = next_url1 + '?access_token=' + access_token + '&param=' + conversation_code + ':' + user_id,''; 20221204 h.hirayama modfied
+    action_str = next_url1 + '?access_token=' + access_token + '&param=' + conversation_code + ':' + user_id + ':' + join_mode,'';
     document.jitsi_form.action = action_str;
     document.jitsi_form.method = 'post';
     document.jitsi_form.target = 'jitsi_window';
