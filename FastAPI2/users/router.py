@@ -372,6 +372,7 @@ async def post_pagename(request: Request,pagename: str,access_token: str,param: 
         print('this is jitsi_api')
         conversation_code = param.split(':')[0]
         user_id = param.split(':')[1]
+        join_mode = param.split(':')[2] # 20221203 hirayama modified
         if user_id == "":
             user_id = 0
         query = "select username_sei,username_mei from nbmt_users where user_id ='%s'"  % (user_id)
@@ -394,7 +395,17 @@ async def post_pagename(request: Request,pagename: str,access_token: str,param: 
         resultset = await database.execute(query)
         # 受け側の場合はreservation_talking_category の更新 2022/11/12 added end
 
-        return templates.TemplateResponse(page_file,{'request': request,'chatroomName': conversation_code,'fullname': fullname,'userid': user_id})
+        # 会話終了時間を取得 2022/12/04 added start
+        query = "select scheduled_end_timestamp from nbtt_conversation_lists where conversation_code ='%s'"  % (conversation_code)
+        print("kensa 1")
+        result = await database.fetch_all(query)
+        print("kensa 3")
+        conversation_time = result[0][0]
+        print("query jitsi_api - conversation_time:" + str(conversation_time))
+        # 会話終了時間を取得 2022/12/04 added end
+
+        print("jitsi_api before_return:" + join_mode)
+        return templates.TemplateResponse(page_file,{'request': request,'chatroomName': conversation_code,'fullname': fullname,'userid': user_id,'join_mode': join_mode,'conversation_time': conversation_time}) #20221204 hirayama modified
     # 2022/9/18 modified end
     elif pagename == 'pointtranlist':
         # ポイントトランザクションの一覧処理
@@ -847,7 +858,7 @@ async def ConversationListSelect(request: Request,access_token: str,conversation
 
         if len(values["conversation_code"]) != 0: # conversation_codeに値がある場合会話コードで検索する
             query = nbtt_conversation_lists.select().where(nbtt_conversation_lists.c.conversation_code == values["conversation_code"]).where(nbtt_conversation_lists.c.scheduled_end_timestamp > now).where(nbtt_conversation_lists.c.is_deleted == False)
-            print("function :" + subroutine + " query 1")
+            print("function :" + subroutine + " query 1" + " conversation_code:" + values["conversation_code"])
         elif len(values["conversation_code"]) == 0 and values["user_id"] != 0 : # conversation_codeに値がなく、user_idが0でない場合、受け取ったuser_idで検索する
             query = nbtt_conversation_lists.select().where(nbtt_conversation_lists.c.user_id == values["user_id"]).where(nbtt_conversation_lists.c.scheduled_end_timestamp > now).where(nbtt_conversation_lists.c.is_deleted == False)
             print("function :" + subroutine + " query 2")
@@ -873,6 +884,7 @@ async def ConversationListSelect(request: Request,access_token: str,conversation
                     % (now.strftime('%Y-%m-%d %H:%M:%S'),values["to_user_id"],values["reservation_talking_category"])
                     # % (now.strftime('%Y-%m-%d %H:%M:%S'),values["to_user_id"],"proposed") 20221124 modified
             print("function :" + subroutine + " query 3 len:" + str(len(query)))
+            print("param :WHERE c.scheduled_end_timestamp > " + now.strftime('%Y-%m-%d %H:%M:%S') + " c.to_user_id = " + str(values["to_user_id"]) + " c.reservation_talking_category = " + values["reservation_talking_category"] )
             # 2022/3/27 added end
         else:
             print("nbtt_conversation_lists..conversation_code ='' user_id = 0 to_user_id = 0") # converasation_codeが空で、ユーザIDが0の場合
@@ -881,7 +893,7 @@ async def ConversationListSelect(request: Request,access_token: str,conversation
         resultset = await database.fetch_all(query)
         # print("★ここに入るはず②")
         if len(resultset) > 0:
-            print("resultset:" + str(resultset[0]["user_id"]))
+            print("resultset:" + str(resultset[0]["user_id"])  + str(resultset[0]["reservation_talking_category"]))
             print(resultset)
         else:
             print("query no match.")
