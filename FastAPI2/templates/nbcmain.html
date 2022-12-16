@@ -40,7 +40,7 @@
       <input type="text" class="form-control" id="inputCity" disabled/>
     </div>
     <div class="row mb-4 mx-auto">
-      <button type="submit" class="btn btn-info col-sm-12 text-white" id="btnSearch">検索</button>
+      <button type="button" class="btn btn-info col-sm-12 text-white" id="btnSearch" onClick="getMatchedUsers()">検索</button>
     </div>
   </form>
 
@@ -49,40 +49,40 @@
   </div>
 
   <form class="bg-white mx-4">
-    <div class="row" style="background-color:whitesmoke">
+    <div class="row" style="background-color:whitesmoke" id="serachedUsersList">  
       <div class="col-md-2 bg-white m-2">
         <div style="position: relative;">
           <img id="matchedUserImg" src="./img/sample.png" height="50" width="50" class="rounded-circle"/>
           <div style="display: flex;justify-content: center;align-items: center;cursor: pointer;position: absolute;top: 70%;left:15%;">
             <img id="matchedUserStatus" src="./img/status_online.png" height="20" width="20" class="rounded-circle"/>
           </div>
-          <span class="fs-4" id="matchedUserName">伊勢　花子</span>
+          <span class="fs-4" id="matchedUserName">ダミー　花子</span>
           <span>さん</span>
         </div>
         <div>
-          <span id="hobbyLicenseTag">サッカー バスケ お酒 海外旅行 フェス ブルーノマーズ ザウィークエンド</span>
+          <span id="hobbyLicenseTag">ダミー　サッカー バスケ お酒 海外旅行 フェス ブルーノマーズ ザウィークエンド</span>
         </div>
         <div>
           <span style="font-size:x-small" class="align-top">出身</span>
-          <span id="comeFrom" class="fs-4">東京都港区</span>
+          <span id="comeFrom" class="fs-4">ダミー　東京都港区</span>
         </div>
         <div>
           <span style="font-size:x-small" class="align-top">IMS歴</span>
-          <span id="IMSYear"class="fs-4">12</span>
+          <span id="IMSYear"class="fs-4">ダミー　12</span>
           <span>年</span>
         </div>
         <div>
           <span style="font-size:x-small" class="align-top">その他</span>
-          <span id="freeComment" class="fs-4">ここにコメント自由コメントフリーコメント</span>
+          <span id="freeComment" class="fs-4">ダミー　ここにコメント自由コメントフリーコメント</span>
         </div>
-        <button type="button" id="015" value="伊勢　花子" class="btn btn-primary" onClick="ShowRequestModal(this.id,this.value)">会話する</button>
+        <button type="button" id="ダミー　1" value="平山　花子" class="btn btn-primary" onClick="ShowRequestModal(this.id,this.value)">会話する</button>
       </div>
     </div>
   </form>
-  <!-- リクエスト用のモーダル -->
-  <div class="row row-cols-1 row-cols-md-3 g-4" id="requestModal-all"></div>
-  <!-- リクエスト受付用のモーダル -->
-  <div class="row row-cols-1 row-cols-md-3 g-4" id="requestedModal-all"></div>
+      <!-- リクエスト用のモーダル -->
+      <div class="row row-cols-1 row-cols-md-3 g-4" id="requestModal-all"></div>
+      <!-- リクエスト受付用のモーダル -->
+      <div class="row row-cols-1 row-cols-md-3 g-4" id="requestedModal-all"></div>
   <!-- jitsi開く用のform -->
   <form name="jitsi_form" method="post" style="display:none;"></form>
 </body>
@@ -250,9 +250,9 @@
                 + '      <div class="modal-footer">'
                 + '        <button type="button" id="' + json.conversation_code + '" class="btn btn-secondary" data-bs-dismiss="modal" value ="' + json.update_timestamp + ',cancel" onclick="SetOnPolling(OnPolling_SEEK);ConversationListsUpdate(this.id ,this.value)">キャンセル</button>'
                 // + '  test      <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" >キャンセル</button>'
-                + '      </div>'
                 + '    </div>'
                 + '  </div>'
+                + '</div>'
                 + '</div>'
             $("#requestModal-all").empty();
             $("#requestModal-all").append(h);
@@ -270,10 +270,9 @@
     })
   }
 
-  // 申し込み後、相手から承諾が来たかポーリングする。10秒ごとにgetConversationLists実行
+    // 申し込み後、相手から承諾が来たかポーリングする。10秒ごとにgetConversationLists実行
   async function RequestPolling(conversation_code,proposed_username){
     const intervalMs = 10000;
-
     // インターバルだけ待ってgetConversationListsをselectするPromiseを作成するヘルパメソッド
     const poll = (milliSeconds) => new Promise(resolve => {
       setTimeout(() => resolve(getRequestConversationList(conversation_code,proposed_username)), milliSeconds);
@@ -603,6 +602,82 @@
       });
   });
 
-  </script>
+
+
+  // マッチング結果を取得する
+  async function getMatchedUsers(){
+    token = sessionStorage.getItem("TOKEN");    //セッションに保存
+    var fetch_url = 'http://' + location.host + '/MatchedUsersSelect?access_token=';
+    if (onpolling !== 1){ // 本当は呼び出し側に入れたかったが断念
+      return;
+    };
+
+    data = {
+      "user_id": {{ user['user_id'] }}, //自身のUser_ID*検索結果から自分を抜くため
+      "free_comment": "テストコメント" // フリーワード
+    }
+    return await fetch(fetch_url + token,
+    {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'accept': 'application/json'
+        },
+        body: JSON.stringify(data)
+    })
+    .then(response => {
+        if( response.status === 200 ){
+            return response.json();
+        } else if (response.status === 401 ){
+            return response.json();
+        } else {
+          throw new Error(response.json());
+        }
+    })
+    .then(function(json){
+      $("#serachedUsersList").empty();
+      for(var i = 0; i < json.length; i++){
+        if(json.length > 0){
+        // var h = '<div class="col" id="h-100">'
+          matched_user = json[i]
+          h = '<div class="col-md-2 bg-white m-2">'
+            + '<div style="position: relative;">'
+            + '  <img id="matchedUserImg" src="./img/sample.png" height="50" width="50" class="rounded-circle"/>'
+            + '<div style="display: flex;justify-content: center;align-items: center;cursor: pointer;position: absolute;top: 70%;left:15%;">'
+            + '  <img id="matchedUserStatus" src="./img/status_online.png" height="20" width="20" class="rounded-circle"/>'
+            + '</div>'
+            + '<div>'
+            + '  <span class="fs-4" id="matchedUserName">' + matched_user.username_sei + ' ' + matched_user.username_mei + '</span>'
+            + '  <span>さん</span>'
+            + '</div>'
+            + '<div>'
+            + '  <span id="hobbyLicenseTag">サッカー</span>'
+            + '</div>'
+            + '<div>'
+            + '  <span style="font-size:x-small" class="align-top">出身</span>'
+            + '  <span id="comeFrom" class="fs-4">' + matched_user.birthplace + '</span>'
+            + '</div>'
+            + '<div>'
+            + '  <span style="font-size:x-small" class="align-top">IMS歴</span>'
+            + '  <span id="IMSYear"class="fs-4">' + matched_user.IMS_join_year + '</span>'
+            + '  <span>年</span>'
+            + '</div>'
+            + '<div>'
+            + '  <span style="font-size:x-small" class="align-top">その他</span>'
+            + '  <span id="freeComment" class="fs-4">' + matched_user.free_comment + '</span>'
+            + '</div>'
+            + '<button type="button" id="' + matched_user.user_id + '" value="' + matched_user.username_sei + ' ' + matched_user.username_mei + '" class="btn btn-primary" onClick="ShowRequestModal(this.id,this.value)">会話する</button>'
+            + '</div>'
+              $("#serachedUsersList").append(h);
+        }
+      }
+    })
+    .catch(err => {
+        console.log(err);
+        return err;
+    })
+  }
+
+</script>
 
 {% endblock %}
