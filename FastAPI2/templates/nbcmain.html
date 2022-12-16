@@ -573,7 +573,7 @@
 
     var next_url1 = 'http://' + location.host + '/pages/jitsi_api';
     access_token = sessionStorage.getItem("TOKEN");    //セッションに保存
-    window.open('', 'jitsi_window');  
+    w = window.open('', 'jitsi_window');  
     // フォーム
     // action_str = next_url1 + '?access_token=' + access_token + '&param=' + conversation_code + ':' + user_id,''; 20221204 h.hirayama modfied
     action_str = next_url1 + '?access_token=' + access_token + '&param=' + conversation_code + ':' + user_id + ':' + join_mode,'';
@@ -582,6 +582,12 @@
     document.jitsi_form.target = 'jitsi_window';
     document.jitsi_form.submit();  
     // アンケート画面はjitsi_apiの先で表示する
+
+    const timer = setInterval(() => {
+      if(!w.closed) return;
+      clearInterval(timer);
+      onpolling = OnPolling_SEEK;
+    }, 100);
 
   }
   // トーク開始 2022/9/19 modified end
