@@ -215,4 +215,10 @@ class nbet_surveysSelect(BaseModel):
     regist_user_id: int
     update_timestamp: str
     update_user_id: int
+
 # 20220925 hirayama added end
+# 20221203 komata added
+class nbmt_usersSearchKeyword(BaseModel):
+    user_id: int
+    free_comment: str
+# 20221203 komata added end
