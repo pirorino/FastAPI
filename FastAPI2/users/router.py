@@ -45,6 +45,10 @@ from .schemas import nbmt_usersSelect,nbmt_usersCreate,nbmt_usersUpdate
 from .schemas import nbet_surveysCreate,nbet_surveysSelect
 # 2022/09/25 Hirayama added end
 
+# 2022/12/03 Komata added start
+from .schemas import nbmt_usersSearchKeyword
+# 2022/12/03 Komata added end
+
 import shutil
 # new テンプレート関連の設定 (jinja2)
 templates = Jinja2Templates(directory="templates")
@@ -385,15 +389,15 @@ async def post_pagename(request: Request,pagename: str,access_token: str,param: 
             fullname = result[0][0] + " " + result[0][1] 
         print("conversation_code:" + conversation_code + " fullname:" + fullname)
 
-        # 受け側の場合はreservation_talking_category の更新 2022/11/12 added
-        query = nbtt_conversation_lists.update().where(nbtt_conversation_lists.columns.conversation_code==conversation_code).where(nbtt_conversation_lists.columns.to_user_id==int(user_id)).values( \
-        reservation_talking_category="talking", \
-        update_timestamp=now, \
-        update_user_id=int(user_id) \
-        )
-        print("query jitsi_api - ConversationListUpdate:" + str(query))
-        resultset = await database.execute(query)
-        # 受け側の場合はreservation_talking_category の更新 2022/11/12 added end
+        # 受け側の場合はreservation_talking_category の更新 2022/11/12 added 2022/12/16 deleted
+        # query = nbtt_conversation_lists.update().where(nbtt_conversation_lists.columns.conversation_code==conversation_code).where(nbtt_conversation_lists.columns.to_user_id==int(user_id)).values( \
+        # reservation_talking_category="talking", \
+        # update_timestamp=now, \
+        # update_user_id=int(user_id) \
+        # )
+        # print("query jitsi_api - ConversationListUpdate:" + str(query))
+        # resultset = await database.execute(query)
+        # 受け側の場合はreservation_talking_category の更新 2022/11/12 added end 2022/12/16 deleted end
 
         # 会話終了時間を取得 2022/12/04 added start
         query = "select scheduled_end_timestamp from nbtt_conversation_lists where conversation_code ='%s'"  % (conversation_code)
@@ -1136,3 +1140,40 @@ async def SurveysCreate(surveys: nbet_surveysCreate, database: Database = Depend
     except Exception as e:
         raise HTTPException(status_code=401, detail=subroutine + ":" + str(e))
 # ----------------- 2022/09/25 hirayama added end
+
+# ----------------- 2022/12/03 komata added
+@router.post("/MatchedUsersSelect")
+async def ConversationListSelect(request: Request,access_token: str,searchKeyword: nbmt_usersSearchKeyword, database: Database = Depends(get_connection)):
+
+   # フリーワードに該当するユーザを探す
+    try:
+        subroutine = "MatchedUsersSelect"
+        print("function :" + subroutine)
+        #user = await check_token(access_token , 'access_token')
+
+        dicts = searchKeyword.dict()
+        
+        values = {
+            "user_id": dicts["user_id"],
+            "free_comment": dicts["free_comment"]
+        }
+        
+        #query = nbmt_users.select().where(nbmt_users.columns.free_comment==values["free_comment"] and nbmt_users.columns.user_id != int(values["user_id"]))
+        #query = nbmt_users.select().where(nbmt_users.columns.user_id != int(values["user_id"]))
+
+        query = "SELECT * \
+            FROM nbmt_users \
+            WHERE user_id != %d and free_comment = '%s'" \
+            % (values["user_id"],values["free_comment"])
+
+        resultset = await database.fetch_all(query)
+        
+        if len(resultset) > 0:
+            print("resultset:" + str(resultset[0]["user_id"]))
+            print(resultset)
+        else:
+            print("query no match.")
+        return resultset # 正常取得完了
+    except Exception as e:
+        return {"errorcode": 1,"msg": str(e) + "MatchedUsersSelectでエラーが発生しました。"}
+# ----------------- 2022/12/03 komata added end
