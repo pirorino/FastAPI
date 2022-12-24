@@ -471,7 +471,7 @@
     })
   }
 
-  // (1)申し込みを受ける側の際、受け入れを押した後に実行 (2)申し込みを送る側の際、受けとられた後に実行 (3)申し込みを受ける側の際、ごめんを押した後に実行 (4)こちらから申し込んだが、やっぱりキャンセルする場合に実行
+  // (1)申し込みを受ける側の際、受け入れを押した後に実行 (2)申し込みを送る側の際、受けとられた後に実行 (3)申し込みを受ける側の際、ごめんを押した後に実行 (4)こちらから申し込んだが、やっぱりキャンセルする場合に実行 (5)申し込みを受ける側が完了した場合に実行
   async function ConversationListsUpdate(conversation_code,value){
     token = sessionStorage.getItem("TOKEN");    //セッションに保存
     var splitstring = value.split(',');
@@ -553,7 +553,7 @@
  */
         //  StartTalking(conversation_code,update_timestamp); 2022/12/4 h.hirayama modified
           StartTalking(conversation_code,update_timestamp,"request");
-        // (3)(4)の場合
+        // (3)(4)(5)の場合
         } else {
         // 特に何も表示しない
           onpolling=OnPolling_SEEK;
@@ -586,7 +586,12 @@
     const timer = setInterval(() => {
       if(!w.closed) return;
       clearInterval(timer);
-      onpolling = OnPolling_SEEK;
+      // 申し込まれた側の場合はConversationListをfinishedへ更新 2022/12/23 added
+      if(join_mode="requested"){
+        ConversationListsUpdate(conversation_code,update_timestamp + ",finished");
+      }
+      // onpolling = OnPolling_SEEK;
+      // 申し込まれた側の場合はConversationListをfinishedへ更新 2022/12/23 added end
     }, 100);
 
   }
