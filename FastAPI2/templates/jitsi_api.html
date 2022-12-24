@@ -1,7 +1,7 @@
 {% extends "layout.html" %}
 {% block content %}
     <div id="meet">
-      <h2>talk screen will be here</h2>
+      <h2>talk screen will be here {{conversation_time}}</h2>
     </div>
     // Jitsi API用のスクリプトを読み込む
     <script src="https://nb-jitsu.hcdev-awspri1.imhds.net/external_api.js"></script>
@@ -115,5 +115,16 @@
                 return err;
             })
         }
+        // 画面表示直後、Jitsiが起動始めない場合があるのでreloadを入れる 2022/12/24
+        function doReload() {
+            // reloadメソッドによりページをリロード
+            window.location.reload();
+        }
+
+        window.addEventListener('load', function () {
+            // ページ表示完了した2秒後にリロード
+            setTimeout(doReload, 2000);
+        });
+
     </script>
 {% endblock %}
