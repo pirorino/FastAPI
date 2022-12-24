@@ -27,6 +27,10 @@
         api.executeCommand('subject', 'NBC ChotChat'); // チャットルームの件名を指定する
         api.executeCommand('toggleAudio'); // 音声のオン / オフ切り替える
 
+        var now_date = new Date();
+        var end_date = new Date('{{conversation_time}}');
+        var timeout_target = end_date - now_date;
+
         async function collectSurvey(){
             token = sessionStorage.getItem("TOKEN");    //セッションに保存
             $("#meet").empty();
@@ -118,7 +122,10 @@
         // 画面表示直後、Jitsiが起動始めない場合があるのでreloadを入れる 2022/12/24
         function doReload() {
             // reloadメソッドによりページをリロード
-            window.location.reload();
+            if (window.name != "reloaded") {
+                window.location.reload();
+                window.name = "reloaded";
+            }
         }
 
         window.addEventListener('load', function () {
@@ -126,5 +133,26 @@
             setTimeout(doReload, 2000);
         });
 
+        // 画面表示直後、Jitsiが起動始めない場合があるのでreloadを入れる 2022/12/24
+
+        function doEndnotify() {
+            // 終了1分前メッセージ
+            alert("あと１分で終了です");
+        }
+
+        window.addEventListener('load', function () {
+            // ページ表示完了した後、現在と会話終了時刻の差の１分前メッセージ
+            setTimeout(doEndnotify, timeout_target - 60000);
+        });
+
+        function doHangup() {
+            // 会話を強制終了
+            api.executeCommand('hangup');
+        }
+
+        window.addEventListener('load', function () {
+            // ページ表示完了した後、現在と会話終了時刻の差のミリ秒後に切断
+            setTimeout(doHangup, timeout_target);
+        });
     </script>
 {% endblock %}
