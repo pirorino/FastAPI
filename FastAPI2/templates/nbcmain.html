@@ -10,7 +10,7 @@
         <span id="userName">{{ user['username_sei'] }} {{ user['username_mei'] }}</span>
         <span class="fs-6">さん</span>
         <a href="javascript:OnLinkClick_profile();" class="btn btn-primary">
-          <img id="matchedUserImg" src="../uploads/sample.png" height="30" width="30" class="rounded-circle"/>
+          <img id="matchedUserImg" src="http://localhost:8000/static/img/sample.png" height="20" width="20" class="rounded-circle"/>
         </a>
       </span>
     </div>
@@ -52,9 +52,9 @@
     <div class="row" style="background-color:whitesmoke" id="serachedUsersList">  
       <div class="col-md-2 bg-white m-2">
         <div style="position: relative;">
-          <img id="matchedUserImg" src="./img/sample.png" height="50" width="50" class="rounded-circle"/>
+          <img id="matchedUserImg" src="http://localhost:8000/static/img/sample.png" height="50" width="50" class="rounded-circle"/>
           <div style="display: flex;justify-content: center;align-items: center;cursor: pointer;position: absolute;top: 70%;left:15%;">
-            <img id="matchedUserStatus" src="./img/status_online.png" height="20" width="20" class="rounded-circle"/>
+            <img id="matchedUserStatus" src="http://localhost:8000/static/img/status_online.png" height="20" width="20" class="rounded-circle"/>
           </div>
           <span class="fs-4" id="matchedUserName">ダミー　花子</span>
           <span>さん</span>
@@ -625,8 +625,8 @@
 
     data = {
       "user_id": {{ user['user_id'] }}, //自身のUser_ID*検索結果から自分を抜くため
-      "free_comment": "テストコメント" // フリーワード
-    }
+      "free_comment": "%" + document.getElementById('inputFreeWord').value + "%" // フリーワード
+            }
     return await fetch(fetch_url + token,
     {
         method: 'POST',
@@ -653,9 +653,9 @@
           matched_user = json[i]
           h = '<div class="col-md-2 bg-white m-2">'
             + '<div style="position: relative;">'
-            + '  <img id="matchedUserImg" src="./img/sample.png" height="50" width="50" class="rounded-circle"/>'
-            + '<div style="display: flex;justify-content: center;align-items: center;cursor: pointer;position: absolute;top: 70%;left:15%;">'
-            + '  <img id="matchedUserStatus" src="./img/status_online.png" height="20" width="20" class="rounded-circle"/>'
+            + '  <img id="matchedUserImg" src="http://localhost:8000/static/img/sample.png" height="50" width="50" class="rounded-circle"/>'
+            + '<div style="display: flex;justify-content: center;align-items: center;cursor: pointer;position: absolute;top: 12%;left:25%;">'
+            + '  <img id="matchedUserStatus" src="http://localhost:8000/static/img/status_online.png" height="20" width="20" class="rounded-circle"/>'
             + '</div>'
             + '<div>'
             + '  <span class="fs-4" id="matchedUserName">' + matched_user.username_sei + ' ' + matched_user.username_mei + '</span>'
