@@ -4,9 +4,16 @@ import hashlib
 import pdb
 import json
 import ast
-from fastapi import APIRouter, Depends, HTTPException, UploadFile,File,Form
+from fastapi import APIRouter, Depends, HTTPException, UploadFile,File,Form, FastAPI 
 from typing import List
 from starlette.requests import Request
+from fastapi.responses import FileResponse
+from pathlib import Path
+
+
+from fastapi.staticfiles import StaticFiles
+app = FastAPI() #komata 20230107
+app.mount("/static", StaticFiles(directory="static"), name="static") #komata 20230107
 
 from databases import Database
 # from sqlalchemy.sql import text
@@ -389,7 +396,7 @@ async def post_pagename(request: Request,pagename: str,access_token: str,param: 
             fullname = result[0][0] + " " + result[0][1] 
         print("conversation_code:" + conversation_code + " fullname:" + fullname)
 
-        # 受け側の場合はreservation_talking_category の更新 2022/11/12 added 2022/12/16 deleted
+        # 受け側の場合はreservation_talking_category の更新 2022/11/12 added 2022/12/16 deleted  
         # query = nbtt_conversation_lists.update().where(nbtt_conversation_lists.columns.conversation_code==conversation_code).where(nbtt_conversation_lists.columns.to_user_id==int(user_id)).values( \
         # reservation_talking_category="talking", \
         # update_timestamp=now, \
@@ -397,7 +404,7 @@ async def post_pagename(request: Request,pagename: str,access_token: str,param: 
         # )
         # print("query jitsi_api - ConversationListUpdate:" + str(query))
         # resultset = await database.execute(query)
-        # 受け側の場合はreservation_talking_category の更新 2022/11/12 added end 2022/12/16 deleted end
+        # 受け側の場合はreservation_talking_category の更新 2022/11/12 added end 2022/12/16 deleted end  
 
         # 会話終了時間を取得 2022/12/04 added start
         query = "select scheduled_end_timestamp from nbtt_conversation_lists where conversation_code ='%s'"  % (conversation_code)
@@ -482,6 +489,17 @@ async def post_pagename(request: Request,pagename: str,access_token: str,param: 
 async def get_js_auth(request: Request):
     # js_auth.jsは静的ファイルだが、jinja2テンプレートファイルとして配置したので/static/js/以下にない
     return templates.TemplateResponse('js_auth.js',{'request': request})
+
+@router.get("/static/img/{filename}")
+async def get_imgfile(filename: str):
+    print("★")
+    return FileResponse('./static/img/' + filename)
+
+
+# @router.get('/static/img/{filename}', response_class=FileResponse)
+# def get_imgfile(filename: str):
+#     path = f'files/{filename}'
+#     return path
 
 # @router.get("/users/super", response_model=List[UserSelect]) 20211212 hirayama comment out
 # async def users_findall(token: str = Depends(oauth2_scheme),database: Database = Depends(get_connection)):
@@ -1158,13 +1176,12 @@ async def ConversationListSelect(request: Request,access_token: str,searchKeywor
             "free_comment": dicts["free_comment"]
         }
         
-        #query = nbmt_users.select().where(nbmt_users.columns.free_comment==values["free_comment"] and nbmt_users.columns.user_id != int(values["user_id"]))
-        #query = nbmt_users.select().where(nbmt_users.columns.user_id != int(values["user_id"]))
-
         query = "SELECT * \
             FROM nbmt_users \
-            WHERE user_id != %d and free_comment = '%s'" \
+            WHERE user_id != %d \
+            and CONCAT(username_sei, username_mei,username_sei_kana, username_mei_kana, birthplace, free_comment) like '%s'" \
             % (values["user_id"],values["free_comment"])
+        print("query :" + query)
 
         resultset = await database.fetch_all(query)
         
